@@ -30,7 +30,7 @@ public class GenererFichierDat
 			// 2. Lecture des coordonnées et de la demande
 			for (int cpt = 0; cpt <= nbClients; cpt++)
 			{
-				int id = sc.nextInt();
+				int idClient = sc.nextInt();
 
 				coordonnees[cpt][0] = sc.nextDouble(); // X
 				coordonnees[cpt][1] = sc.nextDouble(); // Y
