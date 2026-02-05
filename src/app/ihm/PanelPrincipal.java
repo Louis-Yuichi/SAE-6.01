@@ -44,7 +44,7 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 		this.lblFichierDest      = new JLabel("Fichier destination (.dat) :");
 		this.txtFichierDest      = new JTextField(40);
-		this.txtFichierDest.setText("cplex/donnees.dat");
+		this.txtFichierDest.setText("cplex/SAE-6.01-generee.dat");
 		this.btnParcourirDest    = new JButton("Parcourir...");
 
 		this.btnAnalyser         = new JButton("Générer le fichier .dat");
