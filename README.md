@@ -1,15 +1,15 @@
 # SAE-6.01 - Evolution d'une Application Existante
 
 ## Objectifs
-• Développer une application d’optimisation et d’aide à la décision
-• Utiliser les acquis de la ressource Méthodes d’Optimisation
-• Formuler mathématiquement le problème
-• Résoudre le problème avec Cplex
-• Résoudre le problème avec la métaheuristique recuit simulé
+- Développer une application d’optimisation et d’aide à la décision
+- Utiliser les acquis de la ressource Méthodes d’Optimisation
+- Formuler mathématiquement le problème
+- Résoudre le problème avec Cplex
+- Résoudre le problème avec la métaheuristique recuit simulé
 
 ## Prérequis
-• Java JDK 25 ou supérieur
-• IBM CPLEX Optimization Studio
+- Java JDK 25 ou supérieur
+- IBM CPLEX Optimization Studio
 
 ## Structure du projet
 ```
