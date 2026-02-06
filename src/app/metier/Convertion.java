@@ -29,6 +29,32 @@ public class Convertion
 		this.genererFichier(fichierDestination);
 	}
 
+	public String lireFichierContenu(String fichierSource)
+	{
+		StringBuilder contenu = new StringBuilder();
+		try
+		{
+			Scanner sc = new Scanner(new File(fichierSource));
+			while (sc.hasNextLine())
+			{
+				contenu.append(sc.nextLine()).append("\n");
+			}
+			sc.close();
+		}
+		catch (Exception e)
+		{
+			contenu.append("Erreur : ").append(e.getMessage());
+		}
+		return contenu.toString();
+	}
+
+	public String getInfos()
+	{
+		return "Nombre de clients : " + this.nbClients + "\n" +
+		       "Distance optimale : " + this.distanceOptimal + "\n" +
+		       "Capacité max : " + this.qMax;
+	}
+
 	private void lireFichier(String fichierSource)
 	{
 		try

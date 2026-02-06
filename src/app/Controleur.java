@@ -19,6 +19,16 @@ public class Controleur
 		this.convertion.chargerFichiers(fichierSource, fichierDestination);
 	}
 
+	public String lireFichierContenu(String fichierSource)
+	{
+		return this.convertion.lireFichierContenu(fichierSource);
+	}
+
+	public String getInfos()
+	{
+		return this.convertion.getInfos();
+	}
+
 	public static void main(String[] args)
 	{
 		new Controleur();

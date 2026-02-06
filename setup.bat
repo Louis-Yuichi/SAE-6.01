@@ -1,7 +1,13 @@
 @echo off
 
+REM Création du répertoire bin
+if not exist bin mkdir bin
+
 REM Compilation
-javac -d bin "src\app\*.java" "src\app\ihm\*.java" "src\app\metier\*.java"
+setlocal enabledelayedexpansion
+set "FILES="
+for /r src %%f in (*.java) do set "FILES=!FILES! "%%f""
+javac -d bin %FILES%
 
 REM Exécution
 java --enable-preview -cp "bin" app.Controleur
