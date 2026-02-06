@@ -1,50 +1,49 @@
-# SAE-6.01
+# SAE-6.01 - Evolution d'une Application Existante
 
-## Description du projet
+## Objectifs
+• Développer une application d’optimisation et d’aide à la décision
+• Utiliser les acquis de la ressource Méthodes d’Optimisation
+• Formuler mathématiquement le problème
+• Résoudre le problème avec Cplex
+• Résoudre le problème avec la métaheuristique recuit simulé
 
-Ce projet implémente une solution pour le problème de tournées de véhicules (Vehicle Routing Problem - VRP) en utilisant IBM ILOG CPLEX Optimization Studio (OPL).
+## Prérequis
+• Java JDK 25 ou supérieur
+• IBM CPLEX Optimization Studio
 
-## Contenu du projet
+## Structure du projet
+```
+SAE-6.01/
+├── src/app/            # Code source Java
+│   ├── Controleur.java
+│   ├── ihm/            # Interface graphique
+│   └── metier/         # Logique métier
+├── bin/app/            # Classes compilées
+├── cplex/              # Modèles CPLEX (.mod) & (.dat)
+└── data/               # Fichiers de données (.txt)
+```
 
-### Fichiers principaux
+## Lancement de l'application
 
-- **SAE_6.01.mod** : Modèle OPL définissant le problème d'optimisation
-  - Formulation mathématique du VRP
-  - Variables de décision pour les routes et capacités
-  - Contraintes d'élimination des sous-tours (MTZ)
-  - Fonction objectif : minimisation de la distance totale parcourue
+### Linux
+```bash
+chmod +x setup.sh
+./setup.sh
+```
 
-- **LectureFichier.java** : Classe utilitaire Java pour la lecture de fichiers
-  - Méthode `lireFichier(String cheminFichier)` : lit le contenu d'un fichier texte en UTF-8
+### Windows
+```cmd
+setup.bat
+```
 
-## Paramètres du modèle
+## Fichiers de données
+Les fichiers de données (format `.txt`) sont placés dans `src/app/data/`.
 
-- `n` : Nombre total de sommets (dépôt + clients)
-- `m` : Nombre de clients à desservir
-- `V` : Nombre de véhicules disponibles
-- `Qmax` : Capacité maximale de chaque véhicule
-- `distance[][]` : Matrice des distances entre les nœuds
-- `demande[]` : Demande de chaque client
+## Modèles CPLEX
+Les modèles d'optimisation (.mod) & (.dat) sont dans le dossier `cplex/`.
 
-## Fonctionnalités
-
-### Contraintes implémentées
-
-1. Chaque véhicule part du dépôt et y revient
-2. Chaque client est visité exactement une fois
-3. Conservation des flux pour chaque nœud
-4. Respect de la capacité maximale des véhicules
-5. Élimination des sous-tours (méthode MTZ)
-
-## Utilisation
-
-### Prérequis
-
-- IBM ILOG CPLEX Optimization Studio
-- Java Development Kit (JDK) pour l'utilisation de la classe LectureFichier
-
-### Exécution du modèle
-
-1. Préparer un fichier de données (.dat) contenant les valeurs pour les paramètres
-2. Charger le modèle SAE_6.01.mod dans CPLEX
-3. Lancer l'optimisation
+Pour exécuter un modèle :
+1. Ouvrir IBM CPLEX Optimization Studio
+2. Charger le fichier `.mod` & `.dat`
+3. Configurer les données d'entrée
+4. Lancer l'optimisation

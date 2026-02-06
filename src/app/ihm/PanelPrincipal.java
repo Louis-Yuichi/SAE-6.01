@@ -5,196 +5,345 @@ import app.Controleur;
 import java.io.File;
 
 import java.awt.BorderLayout;
-import java.awt.FileDialog;
-import java.awt.Frame;
-import java.awt.GridLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridLayout;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
-import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
+import javax.swing.JTextField;
+import javax.swing.JTextPane;
+import javax.swing.SwingConstants;
 
 public class PanelPrincipal extends JPanel implements ActionListener
 {
 	private Controleur ctrl;
 
-	private JLabel     lblFichierSource;
-	private JTextField txtFichierSource;
+	private JTextField txtSource;
+	private JTextField txtDest;
 	private JButton    btnParcourirSource;
-
-	private JLabel     lblFichierDest;
-	private JTextField txtFichierDest;
 	private JButton    btnParcourirDest;
-
-	private JButton    btnGenerer;
 	private JButton    btnCharger;
-
-	private JTextArea  txtAffichageSource;
-	private JTextArea  txtAffichageModele;
-	private JTextArea  txtInfos;
+	private JButton    btnGenerer;
+	private JTextPane  txtContenu;
+	private JLabel     lblStatut;
+	
+	private JLabel     lblNbClients;
+	private JLabel     lblQMax;
+	private JLabel     lblDistanceOpt;
+	private JPanel     panelStats;
 
 	public PanelPrincipal(Controleur ctrl)
 	{
 		this.ctrl = ctrl;
 
-		// Initialisation des composants
-		this.lblFichierSource    = new JLabel("Fichier source (.txt) :");
-		this.txtFichierSource    = new JTextField(30);
-		this.btnParcourirSource  = new JButton("Parcourir...");
+		this.setLayout(new BorderLayout(15, 15));
+		this.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+		this.setBackground(new Color(245, 245, 250));
 
-		this.lblFichierDest      = new JLabel("Fichier destination (.dat) :");
-		this.txtFichierDest      = new JTextField(30);
-		this.txtFichierDest.setText("cplex/SAE-6.01-generee.dat");
-		this.btnParcourirDest    = new JButton("Parcourir...");
+		JPanel panelTitre    = this.creerPanelTitre();
+		JPanel panelFichiers = this.creerPanelFichiers();
+		this.panelStats      = this.creerPanelStats();
+		JPanel panelCentre   = this.creerPanelCentre();
+		JPanel panelBas      = this.creerPanelBas();
 
-		this.btnCharger          = new JButton("Charger fichier");
-		this.btnGenerer          = new JButton("Générer .dat");
+		JPanel panelNord = new JPanel();
+		panelNord.setLayout(new BoxLayout(panelNord, BoxLayout.Y_AXIS));
+		panelNord.setOpaque(false);
+		panelNord.add(panelTitre);
+		panelNord.add(Box.createVerticalStrut(15));
+		panelNord.add(panelFichiers);
+		panelNord.add(Box.createVerticalStrut(15));
+		panelNord.add(this.panelStats);
 
-		// Zones d'affichage
-		this.txtAffichageSource = new JTextArea(15, 40);
-		this.txtAffichageSource.setEditable(false);
-		this.txtAffichageSource.setLineWrap(true);
-		this.txtAffichageSource.setWrapStyleWord(true);
+		this.add(panelNord  , BorderLayout.NORTH );
+		this.add(panelCentre, BorderLayout.CENTER);
+		this.add(panelBas   , BorderLayout.SOUTH );
 
-		this.txtAffichageModele = new JTextArea(15, 40);
-		this.txtAffichageModele.setEditable(false);
-		this.txtAffichageModele.setLineWrap(true);
-		this.txtAffichageModele.setWrapStyleWord(true);
+		this.btnParcourirSource.addActionListener(this);
+		this.btnParcourirDest  .addActionListener(this);
+		this.btnCharger        .addActionListener(this);
+		this.btnGenerer        .addActionListener(this);
+		
+		this.panelStats.setVisible(false);
+	}
 
-		this.txtInfos = new JTextArea(5, 40);
-		this.txtInfos.setEditable(false);
-		this.txtInfos.setLineWrap(true);
+	private JPanel creerPanelTitre()
+	{
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+		panel.setBackground(new Color(41, 128, 185));
+		panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-		// Mise en place du layout principal
-		this.setLayout(new BorderLayout(10, 10));
-		this.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+		JLabel lblTitre = new JLabel("GENERATEUR CPLEX - SAE 6.01", SwingConstants.CENTER);
+		lblTitre.setFont(new Font("Arial", Font.BOLD, 26));
+		lblTitre.setForeground(Color.WHITE);
 
-		// Panel gauche avec onglets
-		JTabbedPane tabbedPane = new JTabbedPane();
-		tabbedPane.addTab("Fichier source", new JScrollPane(this.txtAffichageSource));
-		tabbedPane.addTab("Aperçu .dat", new JScrollPane(this.txtAffichageModele));
-		tabbedPane.addTab("Infos", new JScrollPane(this.txtInfos));
+		JLabel lblSousTitre = new JLabel("Conversion de fichiers .txt vers format .dat OPL", SwingConstants.CENTER);
+		lblSousTitre.setFont(new Font("Arial", Font.PLAIN, 14));
+		lblSousTitre.setForeground(new Color(236, 240, 241));
 
-		// Panel droit avec contrôles
-		JPanel panelDroit = new JPanel();
-		panelDroit.setLayout(new GridLayout(8, 1, 5, 10));
-		panelDroit.setPreferredSize(new Dimension(250, 400));
+		panel.add(lblTitre, BorderLayout.CENTER);
+		panel.add(lblSousTitre, BorderLayout.SOUTH);
 
-		panelDroit.add(new JLabel("--- SÉLECTION FICHIERS ---"));
-		panelDroit.add(this.lblFichierSource);
-		panelDroit.add(this.txtFichierSource);
-		panelDroit.add(this.btnParcourirSource);
+		return panel;
+	}
 
-		panelDroit.add(this.lblFichierDest);
-		panelDroit.add(this.txtFichierDest);
-		panelDroit.add(this.btnParcourirDest);
+	private JPanel creerPanelFichiers()
+	{
+		JPanel panel = new JPanel();
+		panel.setLayout(new GridLayout(2, 3, 15, 10));
+		panel.setBackground(Color.WHITE);
+		panel.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+			BorderFactory.createEmptyBorder(20, 20, 20, 20)
+		));
+
+		this.txtSource          = new JTextField("src/app/data/tai75a.txt", 30);
+		this.txtDest            = new JTextField("cplex/SAE-6.01-generee.dat", 30);
+		this.btnParcourirSource = new JButton("Parcourir...");
+		this.btnParcourirDest   = new JButton("Parcourir...");
+
+		this.txtSource.setFont(new Font("Monospaced", Font.PLAIN, 12));
+		this.txtDest  .setFont(new Font("Monospaced", Font.PLAIN, 12));
+
+		this.btnParcourirSource.setPreferredSize(new Dimension(120, 30));
+		this.btnParcourirDest  .setPreferredSize(new Dimension(120, 30));
+		this.btnParcourirSource.setBackground(new Color(149, 165, 166));
+		this.btnParcourirDest  .setBackground(new Color(149, 165, 166));
+		this.btnParcourirSource.setForeground(Color.WHITE);
+		this.btnParcourirDest  .setForeground(Color.WHITE);
+		this.btnParcourirSource.setFocusPainted(false);
+		this.btnParcourirDest  .setFocusPainted(false);
+
+		JLabel lblSource = new JLabel("Fichier source (.txt) :");
+		JLabel lblDest   = new JLabel("Fichier destination (.dat) :");
+		lblSource.setFont(new Font("Arial", Font.BOLD, 13));
+		lblDest  .setFont(new Font("Arial", Font.BOLD, 13));
+
+		panel.add(lblSource);
+		panel.add(this.txtSource);
+		panel.add(this.btnParcourirSource);
+		panel.add(lblDest);
+		panel.add(this.txtDest);
+		panel.add(this.btnParcourirDest);
+
+		return panel;
+	}
+
+	private JPanel creerPanelStats()
+	{
+		JPanel panel = new JPanel();
+		panel.setLayout(new GridLayout(1, 3, 15, 0));
+		panel.setOpaque(false);
+
+		this.lblNbClients   = new JLabel("0", SwingConstants.CENTER);
+		this.lblQMax        = new JLabel("0", SwingConstants.CENTER);
+		this.lblDistanceOpt = new JLabel("0.00", SwingConstants.CENTER);
+
+		JPanel panelClients = this.creerCarteStat("CLIENTS", this.lblNbClients, new Color(52, 152, 219));
+		JPanel panelQMax    = this.creerCarteStat("CAPACITE MAX", this.lblQMax, new Color(46, 204, 113));
+		JPanel panelDist    = this.creerCarteStat("DISTANCE OPTIMALE", this.lblDistanceOpt, new Color(155, 89, 182));
+
+		panel.add(panelClients);
+		panel.add(panelQMax);
+		panel.add(panelDist);
+
+		return panel;
+	}
+
+	private JPanel creerCarteStat(String titre, JLabel lblValeur, Color couleur)
+	{
+		JPanel carte = new JPanel();
+		carte.setLayout(new BorderLayout(0, 10));
+		carte.setBackground(couleur);
+		carte.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createLineBorder(couleur.darker(), 2),
+			BorderFactory.createEmptyBorder(20, 15, 20, 15)
+		));
+
+		JLabel lblTitre = new JLabel(titre, SwingConstants.CENTER);
+		lblTitre.setFont(new Font("Arial", Font.BOLD, 11));
+		lblTitre.setForeground(Color.WHITE);
+
+		lblValeur.setFont(new Font("Arial", Font.BOLD, 32));
+		lblValeur.setForeground(Color.WHITE);
+
+		carte.add(lblTitre, BorderLayout.NORTH);
+		carte.add(lblValeur, BorderLayout.CENTER);
+
+		return carte;
+	}
+
+	private JPanel creerPanelCentre()
+	{
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+		panel.setOpaque(false);
+
+		this.txtContenu = new JTextPane();
+		this.txtContenu.setEditable(true);
+		this.txtContenu.setFont(new Font("Monospaced", Font.PLAIN, 12));
+		this.txtContenu.setBackground(new Color(250, 250, 250));
+
+		JScrollPane scrollContenu = new JScrollPane(this.txtContenu);
+		scrollContenu.setBorder(BorderFactory.createCompoundBorder(
+			BorderFactory.createTitledBorder(
+				BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
+				"Contenu du fichier source",
+				0,
+				0,
+				new Font("Arial", Font.BOLD, 13),
+				new Color(52, 73, 94)
+			),
+			BorderFactory.createEmptyBorder(10, 10, 10, 10)
+		));
+
+		panel.add(scrollContenu, BorderLayout.CENTER);
+
+		return panel;
+	}
+
+	private JPanel creerPanelBas()
+	{
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout(0, 10));
+		panel.setOpaque(false);
 
 		JPanel panelBoutons = new JPanel();
-		panelBoutons.setLayout(new GridLayout(2, 1, 5, 5));
+		panelBoutons.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
+		panelBoutons.setOpaque(false);
+
+		this.btnCharger = new JButton("Charger le fichier");
+		this.btnGenerer = new JButton("Generer le .dat");
+		this.lblStatut  = new JLabel(" Pret a demarrer", SwingConstants.CENTER);
+
+		this.btnCharger.setPreferredSize(new Dimension(180, 45));
+		this.btnGenerer.setPreferredSize(new Dimension(180, 45));
+
+		this.btnCharger.setFont(new Font("Arial", Font.BOLD, 14));
+		this.btnGenerer.setFont(new Font("Arial", Font.BOLD, 14));
+		this.lblStatut .setFont(new Font("Arial", Font.ITALIC, 13));
+
+		this.btnCharger.setBackground(new Color(52, 152, 219));
+		this.btnGenerer.setBackground(new Color(46, 204, 113));
+		this.btnCharger.setForeground(Color.WHITE);
+		this.btnGenerer.setForeground(Color.WHITE);
+		this.btnCharger.setFocusPainted(false);
+		this.btnGenerer.setFocusPainted(false);
+
+		this.lblStatut.setForeground(new Color(52, 73, 94));
+		this.lblStatut.setOpaque(true);
+		this.lblStatut.setBackground(new Color(236, 240, 241));
+		this.lblStatut.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
 		panelBoutons.add(this.btnCharger);
 		panelBoutons.add(this.btnGenerer);
 
-		// Panel centre avec séparateur
-		JPanel panelCentre = new JPanel(new BorderLayout(10, 10));
-		panelCentre.add(tabbedPane, BorderLayout.CENTER);
-		panelCentre.add(panelBoutons, BorderLayout.SOUTH);
+		panel.add(panelBoutons, BorderLayout.NORTH);
+		panel.add(this.lblStatut, BorderLayout.SOUTH);
 
-		// Ajout des panels
-		this.add(panelCentre, BorderLayout.CENTER);
-		this.add(panelDroit, BorderLayout.EAST);
-
-		// Listeners
-		this.btnParcourirSource.addActionListener(this);
-		this.btnParcourirDest.addActionListener(this);
-		this.btnCharger.addActionListener(this);
-		this.btnGenerer.addActionListener(this);
+		return panel;
 	}
 
 	public void actionPerformed(ActionEvent e)
 	{
 		if (e.getSource() == this.btnParcourirSource)
 		{
-			String fichier = this.selectionnerFichier("Sélectionner le fichier source");
-			if (fichier != null)
-			{
-				this.txtFichierSource.setText(fichier);
-			}
+			String chemin = this.selectionnerFichier("Fichier source");
+			if (chemin != null) this.txtSource.setText(chemin);
 		}
-		else if (e.getSource() == this.btnParcourirDest)
+
+		if (e.getSource() == this.btnParcourirDest)
 		{
-			String fichier = this.selectionnerFichier("Sélectionner le fichier destination");
-			if (fichier != null)
-			{
-				this.txtFichierDest.setText(fichier);
-			}
+			String chemin = this.selectionnerFichier("Fichier destination");
+			if (chemin != null) this.txtDest.setText(chemin);
 		}
-		else if (e.getSource() == this.btnCharger)
+
+		if (e.getSource() == this.btnCharger)
 		{
-			String fichierSource = this.txtFichierSource.getText();
-			if (fichierSource.isEmpty())
+			String source = this.txtSource.getText().trim();
+
+			if (source.isEmpty())
 			{
-				this.txtAffichageSource.setText("Veuillez sélectionner un fichier source !");
+				this.lblStatut.setText(" Veuillez selectionner un fichier source");
+				this.lblStatut.setForeground(new Color(231, 76, 60));
 				return;
 			}
 
-			// Charger le contenu du fichier source
-			String contenu = this.ctrl.lireFichierContenu(fichierSource);
-			this.txtAffichageSource.setText(contenu);
+			this.lblStatut.setText(" Chargement en cours...");
+			this.lblStatut.setForeground(new Color(241, 196, 15));
 
 			try
 			{
-				// Charger l'aperçu du fichier .dat
-				String apercuDat = this.ctrl.genererFichierContenu(fichierSource);
-				this.txtAffichageModele.setText(apercuDat);
-
-				// Charger les infos
-				String infos = this.ctrl.getInfos();
-				this.txtInfos.setText(infos);
+				String contenu = this.ctrl.getContenuFichier(source);
+				this.txtContenu.setText(contenu);
+				this.lblStatut.setText(" Fichier charge : " + new File(source).getName());
+				this.lblStatut.setForeground(new Color(39, 174, 96));
+				this.panelStats.setVisible(false);
 			}
 			catch (Exception ex)
 			{
-				this.txtInfos.setText("✗ Erreur : " + ex.getMessage());
-				this.txtAffichageModele.setText("Erreur lors de la génération de l'aperçu .dat");
+				this.lblStatut.setText(" Erreur : " + ex.getMessage());
+				this.lblStatut.setForeground(new Color(231, 76, 60));
 			}
 		}
-		else if (e.getSource() == this.btnGenerer)
-		{
-			String fichierSource = this.txtFichierSource.getText();
-			String fichierDest   = this.txtFichierDest.getText();
 
-			if (fichierSource.isEmpty() || fichierDest.isEmpty())
+		if (e.getSource() == this.btnGenerer)
+		{
+			String source = this.txtSource.getText().trim();
+			String dest   = this.txtDest  .getText().trim();
+
+			if (source.isEmpty() || dest.isEmpty())
 			{
-				this.txtInfos.setText("Erreur : Veuillez sélectionner les fichiers !");
+				this.lblStatut.setText(" Veuillez completer les champs");
+				this.lblStatut.setForeground(new Color(231, 76, 60));
 				return;
 			}
 
+			this.lblStatut.setText(" Generation en cours...");
+			this.lblStatut.setForeground(new Color(241, 196, 15));
+
 			try
 			{
-				this.ctrl.genererFichier(fichierSource, fichierDest);
-				this.txtInfos.setText("✓ Fichier .dat généré avec succès !\nEmplacement : " + fichierDest);
+				this.ctrl.chargerFichiers(source, dest);
+				
+				int    nbClients = this.ctrl.getNbClients();
+				int    qMax      = this.ctrl.getQMax();
+				double distOpt   = this.ctrl.getDistanceOptimal();
+
+				this.lblNbClients  .setText(String.valueOf(nbClients));
+				this.lblQMax       .setText(String.valueOf(qMax));
+				this.lblDistanceOpt.setText(String.format("%.2f", distOpt));
+
+				this.panelStats.setVisible(true);
+
+				this.lblStatut.setText(" Fichier genere avec succes : " + new File(dest).getName());
+				this.lblStatut.setForeground(new Color(39, 174, 96));
 			}
 			catch (Exception ex)
 			{
-				this.txtInfos.setText("✗ Erreur : " + ex.getMessage());
+				this.lblStatut.setText(" Erreur : " + ex.getMessage());
+				this.lblStatut.setForeground(new Color(231, 76, 60));
 			}
 		}
 	}
 
 	private String selectionnerFichier(String titre)
 	{
-		Frame parent = (Frame) SwingUtilities.getWindowAncestor(this);
-
-		FileDialog dialogueFichier = new FileDialog(parent, titre, FileDialog.LOAD);
-
+		FileDialog dialogueFichier = new FileDialog((JFrame) null, titre, FileDialog.LOAD);
 		dialogueFichier.setFile("*.txt");
 		dialogueFichier.setVisible(true);
 

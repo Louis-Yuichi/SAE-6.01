@@ -4,7 +4,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 
-import java.sql.Date;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -20,7 +21,11 @@ public class Convertion
 
 	public Convertion()
 	{
-		
+		this.nbClients       = 0;
+		this.distanceOptimal = 0.0;
+		this.qMax            = 0;
+		this.coordonnees     = null;
+		this.demandes        = null;
 	}
 
 	public void chargerFichiers(String fichierSource, String fichierDestination)
@@ -29,37 +34,21 @@ public class Convertion
 		this.genererFichier(fichierDestination);
 	}
 
-	public String genererFichierContenu(String fichierSource)
+	public String getContenuFichier(String chemin)
 	{
-		this.lireFichier(fichierSource);
-		return this.construireContenuDat();
-	}
-
-	public String lireFichierContenu(String fichierSource)
-	{
-		StringBuilder contenu = new StringBuilder();
 		try
 		{
-			Scanner sc = new Scanner(new File(fichierSource));
-			while (sc.hasNextLine())
-			{
-				contenu.append(sc.nextLine()).append("\n");
-			}
-			sc.close();
+			return Files.readString(Path.of(chemin));
 		}
 		catch (Exception e)
 		{
-			contenu.append("Erreur : ").append(e.getMessage());
+			throw new RuntimeException("Erreur lors de la lecture du fichier : " + e.getMessage(), e);
 		}
-		return contenu.toString();
 	}
 
-	public String getInfos()
-	{
-		return "Nombre de clients : " + this.nbClients + "\n" +
-		       "Distance optimale : " + this.distanceOptimal + "\n" +
-		       "Capacité max : " + this.qMax;
-	}
+	public int    getNbClients()       { return this.nbClients;       }
+	public double getDistanceOptimal() { return this.distanceOptimal; }
+	public int    getQMax()            { return this.qMax;            }
 
 	private void lireFichier(String fichierSource)
 	{
@@ -79,7 +68,7 @@ public class Convertion
 			// 2. Lecture des coordonnées et de la demande
 			for (int cpt = 0; cpt <= this.nbClients; cpt++)
 			{
-				int idClient = sc.nextInt();
+				sc.nextInt();
 
 				this.coordonnees[cpt][0] = sc.nextDouble(); // X
 				this.coordonnees[cpt][1] = sc.nextDouble(); // Y
@@ -98,50 +87,47 @@ public class Convertion
 
 	private void genererFichier(String fichierDestination)
 	{
-		try
+		try (PrintWriter writer = new PrintWriter(new FileWriter(fichierDestination)))
 		{
-			PrintWriter writer = new PrintWriter(new FileWriter(fichierDestination));
-			writer.print(this.construireContenuDat());
-			writer.close();
+			writer.println("/*********************************************");
+			writer.println(" * OPL 22.1.1.0 Model");
+			writer.println(" * Auteur : Groupe 5");
+			writer.println(" * Date   : " + java.time.LocalDate.now());
+			writer.println(" *********************************************/");
+			writer.println();
+			
+			writer.println("nbClient   = " + this.nbClients + ";");
+			writer.println("nbDepot    = 1;");
+			writer.println("nbVehicule = 10;");
+			writer.println();
+			writer.println("qMax       = " + this.qMax + ";");
+			writer.println();
+			writer.println("demandes   = " + Arrays.toString(this.demandes) + ";");
+			writer.println();
+			
+			writer.println("distances  =");
+			writer.print("[");
+			for (int cpt = 0; cpt <= this.nbClients; cpt++)
+			{
+				writer.print("\n\t[");
+				for (int cpt2 = 0; cpt2 <= this.nbClients; cpt2++)
+				{
+					double distance = this.calculerDistance(cpt, cpt2);
+
+					writer.printf(Locale.US, "%7.2f", distance);
+
+					if (cpt2 < this.nbClients) writer.print(", ");
+				}
+
+				writer.print(cpt == this.nbClients ? "]" : "],");
+			}
+
+			writer.println("\n];");
 		}
 		catch (Exception e)
 		{
 			throw new RuntimeException("Erreur lors de la génération du fichier .dat : " + e.getMessage(), e);
 		}
-	}
-
-	private String construireContenuDat()
-	{
-		StringBuilder contenu = new StringBuilder();
-		Date date = new Date(System.currentTimeMillis());
-		contenu.append("/*********************************************\n");
-		contenu.append(" * OPL 22.1.1.0 Model\n");
-		contenu.append(" * Auteur : Groupe 5\n");
-		contenu.append(" * Date   : ").append(date).append("\n");
-		contenu.append(" *********************************************/\n\n");
-
-		contenu.append("nbClient   = ").append(this.nbClients).append(";\n");
-		contenu.append("nbDepot    = 1;\n");
-		contenu.append("nbVehicule = 10;\n\n");
-		contenu.append("qMax       = ").append(this.qMax).append(";\n\n");
-		contenu.append("demande    = ").append(Arrays.toString(this.demandes)).append(";\n\n");
-
-		contenu.append("distance   =\n[");
-		for (int cpt = 0; cpt <= this.nbClients; cpt++)
-		{
-			contenu.append("\n\t[");
-			for (int cpt2 = 0; cpt2 <= this.nbClients; cpt2++)
-			{
-				double distance = this.calculerDistance(cpt, cpt2);
-				contenu.append(String.format(Locale.US, "%7.2f", distance));
-				if (cpt2 < this.nbClients) { contenu.append(", "); }
-			}
-
-			contenu.append(cpt == this.nbClients ? "]" : "],");
-		}
-		contenu.append("\n];\n");
-
-		return contenu.toString();
 	}
 
 	private double calculerDistance(int point1, int point2)

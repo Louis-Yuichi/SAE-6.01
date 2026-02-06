@@ -14,25 +14,19 @@ public class Controleur
 		new FramePrincipal(this);
 	}
 
-	public void genererFichier(String fichierSource, String fichierDestination)
+	public void chargerFichiers(String fichierSource, String fichierDestination)
 	{
 		this.convertion.chargerFichiers(fichierSource, fichierDestination);
 	}
 
-	public String lireFichierContenu(String fichierSource)
+	public String getContenuFichier(String chemin)
 	{
-		return this.convertion.lireFichierContenu(fichierSource);
+		return this.convertion.getContenuFichier(chemin);
 	}
 
-	public String getInfos()
-	{
-		return this.convertion.getInfos();
-	}
-
-	public String genererFichierContenu(String fichierSource)
-	{
-		return this.convertion.genererFichierContenu(fichierSource);
-	}
+	public int    getNbClients()        { return this.convertion.getNbClients();       }
+	public double getDistanceOptimal()  { return this.convertion.getDistanceOptimal(); }
+	public int    getQMax()             { return this.convertion.getQMax();            }
 
 	public static void main(String[] args)
 	{
