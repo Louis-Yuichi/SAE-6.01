@@ -3,7 +3,6 @@ package app.ihm;
 import app.Controleur;
 
 import java.io.File;
-import java.util.Scanner;
 
 import java.awt.BorderLayout;
 import java.awt.FileDialog;
@@ -82,7 +81,7 @@ public class PanelPrincipal extends JPanel implements ActionListener
 		// Panel gauche avec onglets
 		JTabbedPane tabbedPane = new JTabbedPane();
 		tabbedPane.addTab("Fichier source", new JScrollPane(this.txtAffichageSource));
-		tabbedPane.addTab("Modèle mathématique", new JScrollPane(this.txtAffichageModele));
+		tabbedPane.addTab("Aperçu .dat", new JScrollPane(this.txtAffichageModele));
 		tabbedPane.addTab("Infos", new JScrollPane(this.txtInfos));
 
 		// Panel droit avec contrôles
@@ -151,12 +150,21 @@ public class PanelPrincipal extends JPanel implements ActionListener
 			String contenu = this.ctrl.lireFichierContenu(fichierSource);
 			this.txtAffichageSource.setText(contenu);
 
-			// Charger les infos
-			String infos = this.ctrl.getInfos();
-			this.txtInfos.setText(infos);
+			try
+			{
+				// Charger l'aperçu du fichier .dat
+				String apercuDat = this.ctrl.genererFichierContenu(fichierSource);
+				this.txtAffichageModele.setText(apercuDat);
 
-			// Charger le modèle mathématique
-			this.chargerModele();
+				// Charger les infos
+				String infos = this.ctrl.getInfos();
+				this.txtInfos.setText(infos);
+			}
+			catch (Exception ex)
+			{
+				this.txtInfos.setText("✗ Erreur : " + ex.getMessage());
+				this.txtAffichageModele.setText("Erreur lors de la génération de l'aperçu .dat");
+			}
 		}
 		else if (e.getSource() == this.btnGenerer)
 		{
@@ -178,25 +186,6 @@ public class PanelPrincipal extends JPanel implements ActionListener
 			{
 				this.txtInfos.setText("✗ Erreur : " + ex.getMessage());
 			}
-		}
-	}
-
-	private void chargerModele()
-	{
-		try
-		{
-			StringBuilder modele = new StringBuilder();
-			Scanner sc = new Scanner(new File("cplex/SAE-6.01.mod"));
-			while (sc.hasNextLine())
-			{
-				modele.append(sc.nextLine()).append("\n");
-			}
-			sc.close();
-			this.txtAffichageModele.setText(modele.toString());
-		}
-		catch (Exception e)
-		{
-			this.txtAffichageModele.setText("Erreur lors de la lecture du modèle : " + e.getMessage());
 		}
 	}
 

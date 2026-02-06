@@ -29,6 +29,11 @@ public class Controleur
 		return this.convertion.getInfos();
 	}
 
+	public String genererFichierContenu(String fichierSource)
+	{
+		return this.convertion.genererFichierContenu(fichierSource);
+	}
+
 	public static void main(String[] args)
 	{
 		new Controleur();
