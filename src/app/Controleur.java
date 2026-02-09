@@ -19,14 +19,19 @@ public class Controleur
 		this.convertion.chargerFichiers(fichierSource, fichierDestination);
 	}
 
-	public String getContenuFichier(String chemin)
+	public String getFichierTxt(String chemin)
 	{
-		return this.convertion.getContenuFichier(chemin);
+		return this.convertion.getFichierTxt(chemin);
 	}
 
 	public int    getNbClients()        { return this.convertion.getNbClients();       }
 	public double getDistanceOptimal()  { return this.convertion.getDistanceOptimal(); }
 	public int    getQMax()             { return this.convertion.getQMax();            }
+
+	public String getFichierDat(String fichierSource)
+	{
+		return this.convertion.getFichierDat(fichierSource);
+	}
 
 	public static void main(String[] args)
 	{

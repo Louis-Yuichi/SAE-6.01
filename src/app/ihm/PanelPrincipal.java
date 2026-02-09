@@ -23,6 +23,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
@@ -38,6 +40,7 @@ public class PanelPrincipal extends JPanel implements ActionListener
 	private JButton    btnCharger;
 	private JButton    btnGenerer;
 	private JTextPane  txtContenu;
+	private JTextArea  txtPreviewDat;
 	private JLabel     lblStatut;
 	
 	private JLabel     lblNbClients;
@@ -193,25 +196,33 @@ public class PanelPrincipal extends JPanel implements ActionListener
 		panel.setLayout(new BorderLayout());
 		panel.setOpaque(false);
 
+		JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.setFont(new Font("Arial", Font.BOLD, 12));
+
+		// Onglet 1: Fichier source
 		this.txtContenu = new JTextPane();
 		this.txtContenu.setEditable(true);
 		this.txtContenu.setFont(new Font("Monospaced", Font.PLAIN, 12));
 		this.txtContenu.setBackground(new Color(250, 250, 250));
 
 		JScrollPane scrollContenu = new JScrollPane(this.txtContenu);
-		scrollContenu.setBorder(BorderFactory.createCompoundBorder(
-			BorderFactory.createTitledBorder(
-				BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
-				"Contenu du fichier source",
-				0,
-				0,
-				new Font("Arial", Font.BOLD, 13),
-				new Color(52, 73, 94)
-			),
-			BorderFactory.createEmptyBorder(10, 10, 10, 10)
-		));
+		scrollContenu.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-		panel.add(scrollContenu, BorderLayout.CENTER);
+		// Onglet 2: Prévisualisation .dat
+		this.txtPreviewDat = new JTextArea();
+		this.txtPreviewDat.setEditable(false);
+		this.txtPreviewDat.setFont(new Font("Monospaced", Font.PLAIN, 12));
+		this.txtPreviewDat.setBackground(new Color(250, 250, 250));
+		this.txtPreviewDat.setLineWrap(false);
+		this.txtPreviewDat.setWrapStyleWord(false);
+
+		JScrollPane scrollPreview = new JScrollPane(this.txtPreviewDat);
+		scrollPreview.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+		tabbedPane.addTab("Fichier source (.txt)", scrollContenu);
+		tabbedPane.addTab("Previsualisation .dat", scrollPreview);
+
+		panel.add(tabbedPane, BorderLayout.CENTER);
 
 		return panel;
 	}
@@ -288,8 +299,13 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 			try
 			{
-				String contenu = this.ctrl.getContenuFichier(source);
+				String contenu = this.ctrl.getFichierTxt(source);
 				this.txtContenu.setText(contenu);
+				
+				// Générer la prévisualisation du .dat
+				String contenuDat = this.ctrl.getFichierDat(source);
+				this.txtPreviewDat.setText(contenuDat);
+				
 				this.lblStatut.setText(" Fichier charge : " + new File(source).getName());
 				this.lblStatut.setForeground(new Color(39, 174, 96));
 				this.panelStats.setVisible(false);
