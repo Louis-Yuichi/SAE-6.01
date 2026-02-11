@@ -240,7 +240,7 @@ public class VRPSolution
 			int chargeActuelle = charge(tournee);
 			int capaciteMax = data.getCapacite();
 			
-			sb.append(String.format("  V%d : Dépôt → %s → Dépôt  (%d/%d)\n",
+			sb.append(String.format("  V%d : Dépôt → %s → Dépôt  (capacité : %d/%d)\n",
 				vehicleNumber, tournee, chargeActuelle, capaciteMax));
 		}
 		

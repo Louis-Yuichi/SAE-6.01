@@ -11,13 +11,12 @@ public class Controleur implements RecuitSimule.Callback
 	/* ── Recuit ── */
 	private VRPData        data;
 	private RecuitSimule   recuit;
-	private FrameRecuitSimule frameRecuit;
+	private FramePrincipal framePrincipal;
 
 	public Controleur()
 	{
 		this.convertion = new Convertion();
-		new FramePrincipal(this);
-		this.frameRecuit = new FrameRecuitSimule(this);
+		this.framePrincipal = new FramePrincipal(this);
 	}
 
 	/* ══════ Convertion ══════ */
@@ -31,7 +30,7 @@ public class Controleur implements RecuitSimule.Callback
 	/* ══════ Recuit Simulé ══════ */
 	public void chargerVRP(String fichier) {
 		data = new VRPData(fichier);
-		frameRecuit.log("Chargé : " + data.getNbClients() + " clients, capacité=" +
+		framePrincipal.getPanelRecuit().log("Chargé : " + data.getNbClients() + " clients, capacité=" +
 			data.getCapacite() + ", optimal=" + data.getDistanceOptimale());
 	}
 
@@ -41,8 +40,8 @@ public class Controleur implements RecuitSimule.Callback
 	                         int palier, int maxSA, int maxVeh, boolean meilleur) {
 		recuit = new RecuitSimule(data, t0, tMin, alpha, palier, maxSA, maxVeh, meilleur);
 		recuit.setCallback(this);
-		frameRecuit.setEtatExecution(true);
-		frameRecuit.log(String.format(
+		framePrincipal.getPanelRecuit().setEtatExecution(true);
+		framePrincipal.getPanelRecuit().log(String.format(
 			"Démarrage — T0=%.1f Tmin=%.4f α=%.2f palier=%d maxSA=%d véh=%d voisin=%s",
 			t0, tMin, alpha, palier, maxSA, maxVeh, meilleur ? "meilleur" : "aléatoire"));
 		new Thread(() -> recuit.executer()).start();
@@ -52,14 +51,15 @@ public class Controleur implements RecuitSimule.Callback
 
 	/* ── Callback ── */
 	@Override public void onIteration(int iter, VRPSolution cour, VRPSolution best, double temp) {
-		frameRecuit.majIteration(iter, cour.getCout(), best.getCout(), best.getNbTournees(), temp);
+		framePrincipal.getPanelRecuit().majIteration(iter, cour.getCout(), best.getCout(), best.getNbTournees(), temp);
 	}
 	@Override public void onTermine(VRPSolution best, long ms) {
 		int n = data.getNbClients();
 		double[] xs = new double[n + 1], ys = new double[n + 1];
 		for (int i = 0; i <= n; i++) { xs[i] = data.getX(i); ys[i] = data.getY(i); }
-		frameRecuit.majTermine(best.getCout(), best.toString(), ms, data.getDistanceOptimale());
-		frameRecuit.majGraphe(xs, ys, best.getTournees(), n);
+		framePrincipal.getPanelRecuit().majTermine(best.getCout(), best.toString(), ms, 
+			data.getDistanceOptimale(), best.getNbTournees(), data.getNbClients());
+		framePrincipal.getPanelRecuit().majGraphe(xs, ys, best.getTournees(), n);
 	}
 
 	/* ══════ Main ══════ */
