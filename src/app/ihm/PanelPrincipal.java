@@ -35,17 +35,21 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 	private JTextField txtSource;
 	private JTextField txtDest;
+
 	private JButton    btnParcourirSource;
 	private JButton    btnParcourirDest;
 	private JButton    btnCharger;
 	private JButton    btnGenerer;
+
 	private JTextPane  txtContenu;
+
 	private JTextArea  txtPreviewDat;
+
 	private JLabel     lblStatut;
-	
 	private JLabel     lblNbClients;
 	private JLabel     lblQMax;
 	private JLabel     lblDistanceOpt;
+
 	private JPanel     panelStats;
 
 	public PanelPrincipal(Controleur ctrl)
@@ -109,7 +113,8 @@ public class PanelPrincipal extends JPanel implements ActionListener
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(2, 3, 15, 10));
 		panel.setBackground(Color.WHITE);
-		panel.setBorder(BorderFactory.createCompoundBorder(
+		panel.setBorder(BorderFactory.createCompoundBorder
+		(
 			BorderFactory.createLineBorder(new Color(189, 195, 199), 1),
 			BorderFactory.createEmptyBorder(20, 20, 20, 20)
 		));
@@ -172,7 +177,8 @@ public class PanelPrincipal extends JPanel implements ActionListener
 		JPanel carte = new JPanel();
 		carte.setLayout(new BorderLayout(0, 10));
 		carte.setBackground(couleur);
-		carte.setBorder(BorderFactory.createCompoundBorder(
+		carte.setBorder(BorderFactory.createCompoundBorder
+		(
 			BorderFactory.createLineBorder(couleur.darker(), 2),
 			BorderFactory.createEmptyBorder(20, 15, 20, 15)
 		));
@@ -334,14 +340,14 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 			try
 			{
-this.ctrl.chargerFichiers(cheminSource, cheminDestination);
+				this.ctrl.chargerFichiers(cheminSource, cheminDestination);
 
-				int    nombreClients = this.ctrl.obtenirNombreClients();
-				int    capacitéMax      = this.ctrl.obtenirCapacitéMax();
+				int    nombreClients      = this.ctrl.obtenirNombreClients();
+				int    capaciteMax        = this.ctrl.obtenirCapaciteMax();
 				double distanceOptimale   = this.ctrl.obtenirDistanceOptimale();
 
 				this.lblNbClients  .setText(String.valueOf(nombreClients));
-				this.lblQMax       .setText(String.valueOf(capacitéMax));
+				this.lblQMax       .setText(String.valueOf(capaciteMax));
 				this.lblDistanceOpt.setText(String.format("%.2f", distanceOptimale));
 
 				this.panelStats.setVisible(true);

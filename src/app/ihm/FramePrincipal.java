@@ -7,9 +7,10 @@ import javax.swing.JTabbedPane;
 
 public class FramePrincipal extends JFrame
 {
-	private PanelPrincipal panelPrincipal;
-	private PanelRecuitSimule panelRecuit;
-	private JTabbedPane tabbedPane;
+	private PanelPrincipal    panelPrincipal;
+	private PanelRecuitSimule panelRecuitSimule;
+
+	private JTabbedPane       tabbedPane;
 
 	public FramePrincipal(Controleur ctrl)
 	{
@@ -18,14 +19,13 @@ public class FramePrincipal extends JFrame
 		this.setLocationRelativeTo(null);
 		this.setResizable(false);
 
-		// Création des deux panels
-		this.panelPrincipal = new PanelPrincipal(ctrl);
-		this.panelRecuit = new PanelRecuitSimule(ctrl);
+		this.panelPrincipal    = new PanelPrincipal   (ctrl);
+		this.panelRecuitSimule = new PanelRecuitSimule(ctrl);
 
-		// Création du JTabbedPane avec les deux onglets
 		this.tabbedPane = new JTabbedPane();
-		this.tabbedPane.addTab("Générateur .dat", this.panelPrincipal);
-		this.tabbedPane.addTab("Recuit Simulé", this.panelRecuit);
+
+		this.tabbedPane.addTab("Générateur .dat", this.panelPrincipal   );
+		this.tabbedPane.addTab("Recuit Simulé"  , this.panelRecuitSimule);
 
 		this.add(this.tabbedPane);
 
@@ -35,6 +35,6 @@ public class FramePrincipal extends JFrame
 	
 	public PanelRecuitSimule getPanelRecuit()
 	{
-		return this.panelRecuit;
+		return this.panelRecuitSimule;
 	}
 }

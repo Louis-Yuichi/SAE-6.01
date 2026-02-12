@@ -63,7 +63,6 @@ public class Convertion
 			Scanner sc = new Scanner(new File(fichierSource));
 			sc.useLocale(Locale.US);
 
-			// 1. Lecture des paramètres de l'instance
 			this.nbClients       = sc.nextInt();
 			this.distanceOptimal = sc.nextDouble();
 			this.qMax            = sc.nextInt();
@@ -71,16 +70,18 @@ public class Convertion
 			this.coordonnees = new double[this.nbClients + 1][2];
 			this.demandes    = new int[this.nbClients];
 
-			// 2. Lecture des coordonnées et de la demande
 			for (int cpt = 0; cpt <= this.nbClients; cpt++)
 			{
 				sc.nextInt();
-
-				this.coordonnees[cpt][0] = sc.nextDouble(); // X
-				this.coordonnees[cpt][1] = sc.nextDouble(); // Y
+				this.coordonnees[cpt][0] = sc.nextDouble();
+				this.coordonnees[cpt][1] = sc.nextDouble();
 
 				int demande = sc.nextInt();
-				if (cpt > 0) { this.demandes[cpt-1] = demande; } // Le dépot ne compte pas
+
+				if (cpt > 0)
+				{
+					this.demandes[cpt - 1] = demande;
+				}
 			}
 			
 			sc.close();
@@ -119,22 +120,29 @@ public class Convertion
 		sb.append("nbDepot    = 1;\n");
 		sb.append("nbVehicule = 10;\n");
 		sb.append("\n");
+
 		sb.append("qMax       = ").append(this.qMax).append(";\n");
 		sb.append("\n");
+
 		sb.append("demandes   = ").append(Arrays.toString(this.demandes)).append(";\n");
 		sb.append("\n");
 
 		sb.append("distances  =\n");
 		sb.append("[");
+
 		for (int cpt = 0; cpt <= this.nbClients; cpt++)
 		{
 			sb.append("\n\t[");
+
 			for (int cpt2 = 0; cpt2 <= this.nbClients; cpt2++)
 			{
 				double distance = this.calculerDistance(cpt, cpt2);
 				sb.append(String.format(Locale.US, "%7.2f", distance));
 
-				if (cpt2 < this.nbClients) sb.append(", ");
+				if (cpt2 < this.nbClients)
+				{
+					sb.append(", ");
+				}
 			}
 
 			sb.append(cpt == this.nbClients ? "]" : "],");

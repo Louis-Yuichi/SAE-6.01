@@ -1,40 +1,44 @@
 package app.metier;
 
 import java.io.File;
-import java.util.*;
 
-/** Données VRP : coordonnées, demandes, matrice de distances (fichier Taillard). */
+import java.util.Scanner;
+import java.util.Locale;
+
 public class VRPData
 {
 	private int nombreClients;
-	private int capacité;
-	private double distanceOptimale;
-	private double[][] coordonnées;
-	private int[] demandes;
+	private int capacite;
+
+	private double     distanceOptimale;
+	private double[][] coordonnees;
+
+	private int[]      demandes;
+
 	private double[][] matriceDistances;
 
 	public VRPData(String cheminFichier)
 	{
-		try (Scanner scanneur = new Scanner(new File(cheminFichier)))
+		try (Scanner sc = new Scanner(new File(cheminFichier)))
 		{
-			scanneur.useLocale(Locale.US);
+			sc.useLocale(Locale.US);
 			
-			nombreClients = scanneur.nextInt();
-			distanceOptimale = scanneur.nextDouble();
-			capacité = scanneur.nextInt();
+			this.nombreClients    = sc.nextInt();
+			this.distanceOptimale = sc.nextDouble();
+			this.capacite         = sc.nextInt();
 			
-			coordonnées = new double[nombreClients + 1][2];
-			demandes = new int[nombreClients + 1];
+			this.coordonnees = new double[this.nombreClients + 1][2];
+			this.demandes    = new int   [this.nombreClients + 1];
+
+			sc.nextInt();
+			this.demandes[0] = sc.nextInt();
 			
-			scanneur.nextInt();
-			demandes[0] = scanneur.nextInt(); // dépôt "0 0"
-			
-			for (int cpt = 1; cpt <= nombreClients; cpt++)
+			for (int cpt = 1; cpt <= this.nombreClients; cpt++)
 			{
-				scanneur.nextInt();
-				coordonnées[cpt][0] = scanneur.nextDouble();
-				coordonnées[cpt][1] = scanneur.nextDouble();
-				demandes[cpt] = scanneur.nextInt();
+				sc.nextInt();
+				this.coordonnees[cpt][0] = sc.nextDouble();
+				this.coordonnees[cpt][1] = sc.nextDouble();
+				this.demandes   [cpt]    = sc.nextInt();
 			}
 		}
 		catch (Exception e)
@@ -42,52 +46,34 @@ public class VRPData
 			throw new RuntimeException("Erreur chargement : " + e.getMessage());
 		}
 
-		int nombreNoeuds = nombreClients + 1;
-		matriceDistances = new double[nombreNoeuds][nombreNoeuds];
-		
+		int nombreNoeuds = this.nombreClients + 1;
+
+		this.matriceDistances = new double[nombreNoeuds][nombreNoeuds];
+
 		for (int cpt1 = 0; cpt1 < nombreNoeuds; cpt1++)
 		{
 			for (int cpt2 = cpt1 + 1; cpt2 < nombreNoeuds; cpt2++)
 			{
-				double différenceX = coordonnées[cpt1][0] - coordonnées[cpt2][0];
-				double différenceY = coordonnées[cpt1][1] - coordonnées[cpt2][1];
-				matriceDistances[cpt1][cpt2] = matriceDistances[cpt2][cpt1] = Math.sqrt(différenceX * différenceX + différenceY * différenceY);
+				double differenceX = this.coordonnees[cpt1][0] - this.coordonnees[cpt2][0];
+				double differenceY = this.coordonnees[cpt1][1] - this.coordonnees[cpt2][1];
+
+				this.matriceDistances[cpt1][cpt2] = this.matriceDistances[cpt2][cpt1] = Math.sqrt(differenceX * differenceX + differenceY * differenceY);
 			}
 		}
 	}
 
 	public double obtenirDistance(int noeud1, int noeud2)
 	{
-		return matriceDistances[noeud1][noeud2];
+		return this.matriceDistances[noeud1][noeud2];
 	}
 
-	public int getNombreClients()
-	{
-		return nombreClients;
-	}
+	public int    getNombreClients()     { return this.nombreClients;         }
+	public int    getCapacite()          { return this.capacite;              }
 
-	public int getCapacité()
-	{
-		return capacité;
-	}
+	public double getDistanceOptimale()  { return this.distanceOptimale;      }
 
-	public double getDistanceOptimale()
-	{
-		return distanceOptimale;
-	}
+	public int    getDemande(int client) { return this.demandes[client];      }
 
-	public int getDemande(int client)
-	{
-		return demandes[client];
-	}
-
-	public double getCoordX(int noeud)
-	{
-		return coordonnées[noeud][0];
-	}
-
-	public double getCoordY(int noeud)
-	{
-		return coordonnées[noeud][1];
-	}
+	public double getCoordX(int noeud)   { return this.coordonnees[noeud][0]; }
+	public double getCoordY(int noeud)   { return this.coordonnees[noeud][1]; }
 }

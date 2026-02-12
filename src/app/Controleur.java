@@ -10,93 +10,119 @@ import app.ihm.FramePrincipal;
 public class Controleur implements RecuitSimule.Callback
 {
 	private Convertion     convertion;
-	private VRPData        donnéesVRP;
-	private RecuitSimule   recuitSimulé;
 
-	private FramePrincipal framePrincipal;
+	private VRPData        donneesVRP;
+
+	private RecuitSimule   recuitSimule;
+
+	private FramePrincipal fenetrePrincipale;
 
 	public Controleur()
 	{
-		this.convertion     = new Convertion();
-		this.framePrincipal = new FramePrincipal(this);
+		this.convertion        = new Convertion();
+		this.fenetrePrincipale = new FramePrincipal(this);
 	}
 
-	public void chargerFichiers(String source, String destination)
+	public void chargerFichiers(String cheminSource, String cheminDestination)
 	{
-		convertion.chargerFichiers(source, destination);
+		this.convertion.chargerFichiers(cheminSource, cheminDestination);
 	}
 
-	public String obtenirFichierTexte(String chemin)
+	public String obtenirFichierTexte(String cheminFichier)
 	{
-		return convertion.getFichierTxt(chemin);
+		return this.convertion.getFichierTxt(cheminFichier);
 	}
 
-	public String obtenirFichierDat(String source)
+	public String obtenirFichierDat(String cheminSource)
 	{
-		return convertion.getFichierDat(source);
+		return this.convertion.getFichierDat(cheminSource);
 	}
 
 	public int obtenirNombreClients()
 	{
-		return convertion.getNbClients();
+		return this.convertion.getNbClients();
 	}
 
 	public double obtenirDistanceOptimale()
 	{
-		return convertion.getDistanceOptimal();
+		return this.convertion.getDistanceOptimal();
 	}
 
-	public int obtenirCapacitéMax()
+	public int obtenirCapaciteMax()
 	{
-		return convertion.getQMax();
+		return this.convertion.getQMax();
 	}
 
 	public void chargerVRP(String cheminFichier)
 	{
-		donnéesVRP = new VRPData(cheminFichier);
-		framePrincipal.getPanelRecuit().log("Chargé : " + donnéesVRP.getNombreClients() + " clients, capacité="
-														+ donnéesVRP.getCapacité() + ", optimal=" + donnéesVRP.getDistanceOptimale());
+		this.donneesVRP = new VRPData(cheminFichier);
+		fenetrePrincipale.getPanelRecuit().ajouterLigneJournal("Charge : " + this.donneesVRP.getNombreClients() + " clients, capacité=" + 
+		                                                         this.donneesVRP.getCapacite() + ", optimal=" + this.donneesVRP.getDistanceOptimale());
 	}
 
-	public boolean estDonnéesChargées()
+	public boolean estDonneesChargees()
 	{
-		return donnéesVRP != null;
+		return this.donneesVRP != null;
 	}
 
-	public void lancerRecuit(double températureInitiale, double températureMinimale, double coefficientRefroidissement, int nombreItérationsPalier, int nombreMaxItérationsSansAmélioration, int nombreMaxVéhicules, boolean choisirMeilleurVoisin)
+	public void lancerRecuit(double temperatureInitiale, double temperatureMinimale, double coefficientRefroidissement, int nombreIterationsPalier,
+							 int nombreMaxIterationsSansAmelioration, int nombreMaxVehicules, boolean choisirMeilleurVoisin)
 	{
-		recuitSimulé = new RecuitSimule(donnéesVRP, températureInitiale, températureMinimale, coefficientRefroidissement, nombreItérationsPalier, nombreMaxItérationsSansAmélioration, nombreMaxVéhicules, choisirMeilleurVoisin);
-		recuitSimulé.définirCallback(this);
-		framePrincipal.getPanelRecuit().setEtatExecution(true);
-		framePrincipal.getPanelRecuit().log(String.format("Démarrage — T0=%.1f Tmin=%.4f α=%.2f palier=%d maxSA=%d véh=%d voisin=%s",
-														   températureInitiale, températureMinimale, coefficientRefroidissement, nombreItérationsPalier, nombreMaxItérationsSansAmélioration, nombreMaxVéhicules, choisirMeilleurVoisin ? "meilleur" : "aléatoire"));
-		new Thread(() -> recuitSimulé.exécuter()).start();
+		this.recuitSimule = new RecuitSimule(this.donneesVRP, temperatureInitiale, temperatureMinimale, coefficientRefroidissement, 
+											 nombreIterationsPalier, nombreMaxIterationsSansAmelioration, nombreMaxVehicules, choisirMeilleurVoisin);
+
+		this.recuitSimule.definirCallback(this);
+
+		this.fenetrePrincipale.getPanelRecuit().definirEtatExecution(true);
+		this.fenetrePrincipale.getPanelRecuit().ajouterLigneJournal(String.format("Démarrage — T0=%.1f Tmin=%.4f α=%.2f palier=%d maxSA=%d véh=%d voisin=%s",
+		                                                         temperatureInitiale, temperatureMinimale, coefficientRefroidissement, 
+		                                                         nombreIterationsPalier, nombreMaxIterationsSansAmelioration, nombreMaxVehicules, 
+		                                                         choisirMeilleurVoisin ? "meilleur" : "aléatoire"));
+		new Thread(() -> this.recuitSimule.executer()).start();
 	}
 
-	public void arrêterRecuit()
+	public void arreterRecuit()
 	{
-		if (recuitSimulé != null) recuitSimulé.arrêter();
+		if (this.recuitSimule != null)
+		{
+			this.recuitSimule.arreter();
+		}
 	}
 
-	public void surItération(int numéroItération, VRPSolution solutionCourante, VRPSolution meilleureSolution, double température)
+	public void surIteration(int numeroIteration, VRPSolution solutionCourante, VRPSolution meilleureSolution, double temperature)
 	{
-		framePrincipal.getPanelRecuit().majIteration(numéroItération, solutionCourante.getCoutTotal(), meilleureSolution.getCoutTotal(), meilleureSolution.getNombreTournées(), température);
+		fenetrePrincipale.getPanelRecuit().majIteration(numeroIteration, solutionCourante.getCoutTotal(), meilleureSolution.getCoutTotal(),
+														meilleureSolution.getNombreTournees(), temperature);
 	}
 
-	public void surTerminaison(VRPSolution meilleureSolution, long duréeMillisecondes)
+	public void surTerminaison(VRPSolution meilleureSolution, long dureeMillisecondes)
 	{
-		int nombreClients = donnéesVRP.getNombreClients();
+		int nombreClients = donneesVRP.getNombreClients();
 
-		double[] coordonnéesX = new double[nombreClients + 1], coordonnéesY = new double[nombreClients + 1];
+		double[] coordonneesX = new double[nombreClients + 1];
+		double[] coordonneesY = new double[nombreClients + 1];
 
 		for (int cpt = 0; cpt <= nombreClients; cpt++)
 		{
-			coordonnéesX[cpt] = donnéesVRP.getCoordX(cpt);
-			coordonnéesY[cpt] = donnéesVRP.getCoordY(cpt);
+			coordonneesX[cpt] = donneesVRP.getCoordX(cpt);
+			coordonneesY[cpt] = donneesVRP.getCoordY(cpt);
 		}
 
-		framePrincipal.getPanelRecuit().majTermine(meilleureSolution.getCoutTotal(), meilleureSolution.toString(), duréeMillisecondes, donnéesVRP.getDistanceOptimale(), meilleureSolution.getNombreTournées(), donnéesVRP.getNombreClients());
-		framePrincipal.getPanelRecuit().majGraphe(coordonnéesX, coordonnéesY, meilleureSolution.getTournées(), nombreClients);
+		fenetrePrincipale.getPanelRecuit().majTerminaison(meilleureSolution.getCoutTotal(), meilleureSolution.toString(), dureeMillisecondes, donneesVRP.getDistanceOptimale(), 
+														  meilleureSolution.getNombreTournees(), donneesVRP.getNombreClients());
+
+		fenetrePrincipale.getPanelRecuit().majGraphique(coordonneesX, coordonneesY, meilleureSolution.getTournees(), nombreClients);
+	}
+
+	public String lireFichierTexte(String cheminFichier)
+	{
+		return this.convertion.getFichierTxt(cheminFichier);
+	}
+
+	public String convertirTxtVersDat(String cheminSource, String cheminDestination)
+	{
+		this.convertion.chargerFichiers(cheminSource, cheminDestination);
+		return this.convertion.getFichierDat(cheminDestination);
 	}
 
 	public static void main(String[] args)
