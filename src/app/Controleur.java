@@ -1,67 +1,106 @@
 package app;
 
-import app.metier.*;
-import app.ihm.*;
+import app.metier.Convertion;
+import app.metier.VRPData;
+import app.metier.VRPSolution;
+import app.metier.RecuitSimule;
+
+import app.ihm.FramePrincipal;
 
 public class Controleur implements RecuitSimule.Callback
 {
-	/* ── Convertion ── */
-	private Convertion convertion;
+	private Convertion     convertion;
+	private VRPData        donnéesVRP;
+	private RecuitSimule   recuitSimulé;
 
-	/* ── Recuit ── */
-	private VRPData        data;
-	private RecuitSimule   recuit;
 	private FramePrincipal framePrincipal;
 
 	public Controleur()
 	{
-		this.convertion = new Convertion();
+		this.convertion     = new Convertion();
 		this.framePrincipal = new FramePrincipal(this);
 	}
 
-	/* ══════ Convertion ══════ */
-	public void   chargerFichiers(String src, String dst) { convertion.chargerFichiers(src, dst); }
-	public String getFichierTxt(String chemin)            { return convertion.getFichierTxt(chemin); }
-	public String getFichierDat(String src)               { return convertion.getFichierDat(src); }
-	public int    getNbClients()                          { return convertion.getNbClients(); }
-	public double getDistanceOptimal()                    { return convertion.getDistanceOptimal(); }
-	public int    getQMax()                               { return convertion.getQMax(); }
-
-	/* ══════ Recuit Simulé ══════ */
-	public void chargerVRP(String fichier) {
-		data = new VRPData(fichier);
-		framePrincipal.getPanelRecuit().log("Chargé : " + data.getNbClients() + " clients, capacité=" +
-			data.getCapacite() + ", optimal=" + data.getDistanceOptimale());
+	public void chargerFichiers(String source, String destination)
+	{
+		convertion.chargerFichiers(source, destination);
 	}
 
-	public boolean isDataCharge() { return data != null; }
+	public String obtenirFichierTexte(String chemin)
+	{
+		return convertion.getFichierTxt(chemin);
+	}
 
-	public void lancerRecuit(double t0, double tMin, double alpha,
-	                         int palier, int maxSA, int maxVeh, boolean meilleur) {
-		recuit = new RecuitSimule(data, t0, tMin, alpha, palier, maxSA, maxVeh, meilleur);
-		recuit.setCallback(this);
+	public String obtenirFichierDat(String source)
+	{
+		return convertion.getFichierDat(source);
+	}
+
+	public int obtenirNombreClients()
+	{
+		return convertion.getNbClients();
+	}
+
+	public double obtenirDistanceOptimale()
+	{
+		return convertion.getDistanceOptimal();
+	}
+
+	public int obtenirCapacitéMax()
+	{
+		return convertion.getQMax();
+	}
+
+	public void chargerVRP(String cheminFichier)
+	{
+		donnéesVRP = new VRPData(cheminFichier);
+		framePrincipal.getPanelRecuit().log("Chargé : " + donnéesVRP.getNombreClients() + " clients, capacité="
+														+ donnéesVRP.getCapacité() + ", optimal=" + donnéesVRP.getDistanceOptimale());
+	}
+
+	public boolean estDonnéesChargées()
+	{
+		return donnéesVRP != null;
+	}
+
+	public void lancerRecuit(double températureInitiale, double températureMinimale, double coefficientRefroidissement, int nombreItérationsPalier, int nombreMaxItérationsSansAmélioration, int nombreMaxVéhicules, boolean choisirMeilleurVoisin)
+	{
+		recuitSimulé = new RecuitSimule(donnéesVRP, températureInitiale, températureMinimale, coefficientRefroidissement, nombreItérationsPalier, nombreMaxItérationsSansAmélioration, nombreMaxVéhicules, choisirMeilleurVoisin);
+		recuitSimulé.définirCallback(this);
 		framePrincipal.getPanelRecuit().setEtatExecution(true);
-		framePrincipal.getPanelRecuit().log(String.format(
-			"Démarrage — T0=%.1f Tmin=%.4f α=%.2f palier=%d maxSA=%d véh=%d voisin=%s",
-			t0, tMin, alpha, palier, maxSA, maxVeh, meilleur ? "meilleur" : "aléatoire"));
-		new Thread(() -> recuit.executer()).start();
+		framePrincipal.getPanelRecuit().log(String.format("Démarrage — T0=%.1f Tmin=%.4f α=%.2f palier=%d maxSA=%d véh=%d voisin=%s",
+														   températureInitiale, températureMinimale, coefficientRefroidissement, nombreItérationsPalier, nombreMaxItérationsSansAmélioration, nombreMaxVéhicules, choisirMeilleurVoisin ? "meilleur" : "aléatoire"));
+		new Thread(() -> recuitSimulé.exécuter()).start();
 	}
 
-	public void arreterRecuit() { if (recuit != null) recuit.arreter(); }
-
-	/* ── Callback ── */
-	@Override public void onIteration(int iter, VRPSolution cour, VRPSolution best, double temp) {
-		framePrincipal.getPanelRecuit().majIteration(iter, cour.getCout(), best.getCout(), best.getNbTournees(), temp);
-	}
-	@Override public void onTermine(VRPSolution best, long ms) {
-		int n = data.getNbClients();
-		double[] xs = new double[n + 1], ys = new double[n + 1];
-		for (int i = 0; i <= n; i++) { xs[i] = data.getX(i); ys[i] = data.getY(i); }
-		framePrincipal.getPanelRecuit().majTermine(best.getCout(), best.toString(), ms, 
-			data.getDistanceOptimale(), best.getNbTournees(), data.getNbClients());
-		framePrincipal.getPanelRecuit().majGraphe(xs, ys, best.getTournees(), n);
+	public void arrêterRecuit()
+	{
+		if (recuitSimulé != null) recuitSimulé.arrêter();
 	}
 
-	/* ══════ Main ══════ */
-	public static void main(String[] args) { new Controleur(); }
+	public void surItération(int numéroItération, VRPSolution solutionCourante, VRPSolution meilleureSolution, double température)
+	{
+		framePrincipal.getPanelRecuit().majIteration(numéroItération, solutionCourante.getCoutTotal(), meilleureSolution.getCoutTotal(), meilleureSolution.getNombreTournées(), température);
+	}
+
+	public void surTerminaison(VRPSolution meilleureSolution, long duréeMillisecondes)
+	{
+		int nombreClients = donnéesVRP.getNombreClients();
+
+		double[] coordonnéesX = new double[nombreClients + 1], coordonnéesY = new double[nombreClients + 1];
+
+		for (int cpt = 0; cpt <= nombreClients; cpt++)
+		{
+			coordonnéesX[cpt] = donnéesVRP.getCoordX(cpt);
+			coordonnéesY[cpt] = donnéesVRP.getCoordY(cpt);
+		}
+
+		framePrincipal.getPanelRecuit().majTermine(meilleureSolution.getCoutTotal(), meilleureSolution.toString(), duréeMillisecondes, donnéesVRP.getDistanceOptimale(), meilleureSolution.getNombreTournées(), donnéesVRP.getNombreClients());
+		framePrincipal.getPanelRecuit().majGraphe(coordonnéesX, coordonnéesY, meilleureSolution.getTournées(), nombreClients);
+	}
+
+	public static void main(String[] args)
+	{
+		new Controleur();
+	}
 }

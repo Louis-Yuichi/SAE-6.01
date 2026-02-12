@@ -1,249 +1,254 @@
 package app.metier;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
 
-/** Solution VRP = liste de tournées. Voisinages : swap (intra/inter), relocate, 2-opt. */
 public class VRPSolution
 {
 	private List<List<Integer>> tournees;
-	private double coutTotal;
+
+	private double  coutTotal;
 	private VRPData data;
 
 	public VRPSolution(VRPData data, List<List<Integer>> tournees)
 	{
-		this.data = data; this.tournees = tournees; this.coutTotal = calculerCout();
+		this.data      = data;
+		this.tournees  = tournees;
+		this.coutTotal = calculerCoutTotal();
 	}
 
 	/** Solution initiale aléatoire respectant les capacités. */
-	public static VRPSolution genererAleatoire(VRPData data, int maxVeh, Random rng)
+	public static VRPSolution générerSolutionInitiale(VRPData donnéesVRP, int nombreMaxVéhicules, Random générateur)
 	{
-		List<Integer> clients = new ArrayList<>();
+		List<Integer> listeClients = new ArrayList<>();
 
-		for (int c = 1; c <= data.getNbClients(); c++)
-			clients.add(c);
+		for (int cpt = 1; cpt <= donnéesVRP.getNombreClients(); cpt++)
+			listeClients.add(cpt);
 
-		Collections.shuffle(clients, rng);
+		Collections.shuffle(listeClients, générateur);
 
-		List<List<Integer>> t = new ArrayList<>();
-		List<Integer>       route = new ArrayList<>();
+		List<List<Integer>> tournées = new ArrayList<>();
+		List<Integer>       tournéeEnCours = new ArrayList<>();
 
-		int charge = 0;
+		int chargeActuelle = 0;
 
-		for (int c : clients)
+		for (int client : listeClients)
 		{
-			if (t.size() < maxVeh - 1 && charge + data.getDemande(c) > data.getCapacite())
+			if (tournées.size() < nombreMaxVéhicules - 1 && chargeActuelle + donnéesVRP.getDemande(client) > donnéesVRP.getCapacité())
 			{
-				if (!route.isEmpty())
-					t.add(route);
+				if (!tournéeEnCours.isEmpty())
+					tournées.add(tournéeEnCours);
 
-				route = new ArrayList<>(); charge = 0;
+				tournéeEnCours = new ArrayList<>(); chargeActuelle = 0;
 			}
 
-			route.add(c); charge += data.getDemande(c);
+			tournéeEnCours.add(client); chargeActuelle += donnéesVRP.getDemande(client);
 		}
 
-		if (!route.isEmpty())
-			t.add(route);
+		if (!tournéeEnCours.isEmpty())
+			tournées.add(tournéeEnCours);
 
-		return new VRPSolution(data, t);
+		return new VRPSolution(donnéesVRP, tournées);
 	}
 
-	public VRPSolution copier()
+	public VRPSolution copierSolution()
 	{
-		List<List<Integer>> c = new ArrayList<>();
+		List<List<Integer>> copieTournées = new ArrayList<>();
 
-		for (List<Integer> t : tournees)
-			c.add(new ArrayList<>(t));
+		for (List<Integer> tournée : tournees)
+			copieTournées.add(new ArrayList<>(tournée));
 
-		return new VRPSolution(data, c);
+		return new VRPSolution(data, copieTournées);
 	}
 
 	/** Génère un voisin aléatoire (swap/relocate/2-opt). Retourne null si infaisable. */
-	public VRPSolution voisin(Random rng)
+	public VRPSolution générerVoisin(Random générateur)
 	{
-		switch (rng.nextInt(3))
+		switch (générateur.nextInt(3))
 		{
-			case 0:  return voisinSwap(rng);
-			case 1:  return voisinRelocate(rng);
-			default: return voisin2opt(rng);
+			case 0:  return générerVoisinParÉchange(générateur);
+			case 1:  return générerVoisinParDéplacement(générateur);
+			default: return générerVoisinPar2Opt(générateur);
 		}
 	}
 
-	private VRPSolution voisinSwap(Random rng)
+	private VRPSolution générerVoisinParÉchange(Random générateur)
 	{
-		VRPSolution v = copier();
+		VRPSolution solutionVoisine = copierSolution();
 
-		int nbT = v.tournees.size();
+		int nombreTournées = solutionVoisine.tournees.size();
 
-		if (nbT == 0)
+		if (nombreTournées == 0)
 			return null;
 
-		boolean intra = nbT < 2 || rng.nextBoolean();
+		boolean échangeIntraTournée = nombreTournées < 2 || générateur.nextBoolean();
 
-		if (intra)
+		if (échangeIntraTournée)
 		{
-			List<Integer> r = v.tournees.get(rng.nextInt(nbT));
+			List<Integer> tournée = solutionVoisine.tournees.get(générateur.nextInt(nombreTournées));
 
-			if (r.size() < 2)
+			if (tournée.size() < 2)
 				return null;
 
-			int i = rng.nextInt(r.size()), j;
+			int indiceClient1 = générateur.nextInt(tournée.size()), indiceClient2;
 
 			do
 			{
-				j = rng.nextInt(r.size());
-			} while (j == i);
+				indiceClient2 = générateur.nextInt(tournée.size());
+			} while (indiceClient2 == indiceClient1);
 
-			Collections.swap(r, i, j);
+			Collections.swap(tournée, indiceClient1, indiceClient2);
 		}
 		else
 		{
-			int t1 = rng.nextInt(nbT), t2;
+			int indiceTournée1 = générateur.nextInt(nombreTournées), indiceTournée2;
 
 			do
 			{
-				t2 = rng.nextInt(nbT);
-			} while (t2 == t1);
+				indiceTournée2 = générateur.nextInt(nombreTournées);
+			} while (indiceTournée2 == indiceTournée1);
 
-			List<Integer> r1 = v.tournees.get(t1), r2 = v.tournees.get(t2);
+			List<Integer> tournée1 = solutionVoisine.tournees.get(indiceTournée1), tournée2 = solutionVoisine.tournees.get(indiceTournée2);
 
-			if (r1.isEmpty() || r2.isEmpty())
+			if (tournée1.isEmpty() || tournée2.isEmpty())
 				return null;
 
-			int i = rng.nextInt(r1.size());
-			int j = rng.nextInt(r2.size());
+			int indiceClient1 = générateur.nextInt(tournée1.size());
+			int indiceClient2 = générateur.nextInt(tournée2.size());
 
-			int a = r1.get(i), b = r2.get(j);
+			int client1 = tournée1.get(indiceClient1), client2 = tournée2.get(indiceClient2);
 
-			if (charge(r1) - data.getDemande(a) + data.getDemande(b) > data.getCapacite())
+			if (calculerCharge(tournée1) - data.getDemande(client1) + data.getDemande(client2) > data.getCapacité())
 				return null;
 
-			if (charge(r2) - data.getDemande(b) + data.getDemande(a) > data.getCapacite())
+			if (calculerCharge(tournée2) - data.getDemande(client2) + data.getDemande(client1) > data.getCapacité())
 				return null;
 
-			r1.set(i, b); r2.set(j, a);
+			tournée1.set(indiceClient1, client2); tournée2.set(indiceClient2, client1);
 		}
 
-		v.coutTotal = v.calculerCout();
+		solutionVoisine.coutTotal = solutionVoisine.calculerCoutTotal();
 
-		return v;
+		return solutionVoisine;
 	}
 
-	private VRPSolution voisinRelocate(Random rng)
+	private VRPSolution générerVoisinParDéplacement(Random générateur)
 	{
-		VRPSolution v = copier();
+		VRPSolution solutionVoisine = copierSolution();
 
-		int nbT = v.tournees.size();
+		int nombreTournées = solutionVoisine.tournees.size();
 
-		if (nbT < 2)
+		if (nombreTournées < 2)
 			return null;
 
-		int ts = rng.nextInt(nbT);
-		List<Integer> src = v.tournees.get(ts);
+		int indiceTournéeSource = générateur.nextInt(nombreTournées);
+		List<Integer> tournéeSource = solutionVoisine.tournees.get(indiceTournéeSource);
 
-		if (src.size() <= 1)
+		if (tournéeSource.size() <= 1)
 			return null;
 
-		int td;
+		int indiceTournéeDestination;
 
 		do
 		{
-			td = rng.nextInt(nbT);
-		} while (td == ts);
+			indiceTournéeDestination = générateur.nextInt(nombreTournées);
+		} while (indiceTournéeDestination == indiceTournéeSource);
 
-		List<Integer> dst = v.tournees.get(td);
+		List<Integer> tournéeDestination = solutionVoisine.tournees.get(indiceTournéeDestination);
 
-		int idx = rng.nextInt(src.size());
-		int cli = src.get(idx);
+		int indiceClient = générateur.nextInt(tournéeSource.size());
+		int clientÀDéplacer = tournéeSource.get(indiceClient);
 
-		if (charge(dst) + data.getDemande(cli) > data.getCapacite())
+		if (calculerCharge(tournéeDestination) + data.getDemande(clientÀDéplacer) > data.getCapacité())
 			return null;
 
-		src.remove(idx);
-		dst.add(rng.nextInt(dst.size() + 1), cli);
+		tournéeSource.remove(indiceClient);
+		tournéeDestination.add(générateur.nextInt(tournéeDestination.size() + 1), clientÀDéplacer);
 
-		v.tournees.removeIf(List::isEmpty);
+		solutionVoisine.tournees.removeIf(List::isEmpty);
 
-		v.coutTotal = v.calculerCout();
+		solutionVoisine.coutTotal = solutionVoisine.calculerCoutTotal();
 
-		return v;
+		return solutionVoisine;
 	}
 
-	private VRPSolution voisin2opt(Random rng)
+	private VRPSolution générerVoisinPar2Opt(Random générateur)
 	{
-		VRPSolution v = copier();
+		VRPSolution solutionVoisine = copierSolution();
 		
-		if (v.tournees.isEmpty())
+		if (solutionVoisine.tournees.isEmpty())
 			return null;
 		
-		List<Integer> r = v.tournees.get(rng.nextInt(v.tournees.size()));
+		List<Integer> tournée = solutionVoisine.tournees.get(générateur.nextInt(solutionVoisine.tournees.size()));
 		
-		if (r.size() < 3)
+		if (tournée.size() < 3)
 			return null;
 		
-		int i = rng.nextInt(r.size() - 1);
-		int j = i + 1 + rng.nextInt(r.size() - i - 1);
+		int indiceDebut = générateur.nextInt(tournée.size() - 1);
+		int indiceFin = indiceDebut + 1 + générateur.nextInt(tournée.size() - indiceDebut - 1);
 		
-		Collections.reverse(r.subList(i, j + 1));
+		Collections.reverse(tournée.subList(indiceDebut, indiceFin + 1));
 		
-		v.coutTotal = v.calculerCout();
+		solutionVoisine.coutTotal = solutionVoisine.calculerCoutTotal();
 		
-		return v;
+		return solutionVoisine;
 	}
 
-	private int charge(List<Integer> r)
+	private int calculerCharge(List<Integer> tournée)
 	{
-		int c = 0;
+		int chargeTotal = 0;
 		
-		for (int x : r)
-			c += data.getDemande(x);
+		for (int client : tournée)
+			chargeTotal += data.getDemande(client);
 		
-		return c;
+		return chargeTotal;
 	}
 
-	private double calculerCout()
+	private double calculerCoutTotal()
 	{
-		double tot = 0;
+		double coutTotal = 0;
 		
-		for (List<Integer> r : tournees)
+		for (List<Integer> tournée : tournees)
 		{
-			if (r.isEmpty())
+			if (tournée.isEmpty())
 				continue;
 			
-			tot += data.dist(0, r.get(0));
+			coutTotal += data.obtenirDistance(0, tournée.get(0));
 			
-			for (int i = 0; i < r.size() - 1; i++)
-				tot += data.dist(r.get(i), r.get(i + 1));
+			for (int cpt = 0; cpt < tournée.size() - 1; cpt++)
+				coutTotal += data.obtenirDistance(tournée.get(cpt), tournée.get(cpt + 1));
 			
-			tot += data.dist(r.get(r.size() - 1), 0);
+			coutTotal += data.obtenirDistance(tournée.get(tournée.size() - 1), 0);
 		}
 		
-		return tot;
+		return coutTotal;
 	}
 
-	public double              getCout()       { return coutTotal;       }
-	public List<List<Integer>> getTournees()   { return tournees;        }
-	public VRPData             getData()       { return data;            }
-	public int                 getNbTournees() { return tournees.size(); }
+	public double              getCoutTotal()        { return coutTotal;       }
+	public List<List<Integer>> getTournées()      { return tournees;        }
+	public VRPData             getDonnéesVRP()    { return data;            }
+	public int                 getNombreTournées() { return tournees.size(); }
 
 	@Override
 	public String toString()
 	{
-		StringBuilder sb = new StringBuilder();
+		StringBuilder constructeurTexte = new StringBuilder();
 		
-		sb.append(String.format("Coût : %.2f | %d tournées\n", coutTotal, tournees.size()));
+		constructeurTexte.append(String.format("Coût : %.2f | %d tournées\n", coutTotal, tournees.size()));
 		
-		for (int i = 0; i < tournees.size(); i++)
+		for (int cpt = 0; cpt < tournees.size(); cpt++)
 		{
-			int vehicleNumber = i + 1;
-			List<Integer> tournee = tournees.get(i);
-			int chargeActuelle = charge(tournee);
-			int capaciteMax = data.getCapacite();
+			int numéroVéhicule = cpt + 1;
+			List<Integer> tournée = tournees.get(cpt);
+			int chargeActuelle = calculerCharge(tournée);
+			int capacitéMaximale = data.getCapacité();
 			
-			sb.append(String.format("  V%d : Dépôt → %s → Dépôt  (capacité : %d/%d)\n",
-				vehicleNumber, tournee, chargeActuelle, capaciteMax));
+			constructeurTexte.append(String.format("  V%d : Dépôt → %s → Dépôt  (capacité : %d/%d)\n",
+				numéroVéhicule, tournée, chargeActuelle, capacitéMaximale));
 		}
 		
-		return sb.toString();
+		return constructeurTexte.toString();
 	}
 }

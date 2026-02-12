@@ -6,35 +6,35 @@ import java.util.*;
 /** Données VRP : coordonnées, demandes, matrice de distances (fichier Taillard). */
 public class VRPData
 {
-	private int nbClients;
-	private int capacite;
-	private double distOpt;
-	private double[][] coords;
+	private int nombreClients;
+	private int capacité;
+	private double distanceOptimale;
+	private double[][] coordonnées;
 	private int[] demandes;
-	private double[][] dist;
+	private double[][] matriceDistances;
 
-	public VRPData(String fichier)
+	public VRPData(String cheminFichier)
 	{
-		try (Scanner sc = new Scanner(new File(fichier)))
+		try (Scanner scanneur = new Scanner(new File(cheminFichier)))
 		{
-			sc.useLocale(Locale.US);
+			scanneur.useLocale(Locale.US);
 			
-			nbClients = sc.nextInt();
-			distOpt = sc.nextDouble();
-			capacite = sc.nextInt();
+			nombreClients = scanneur.nextInt();
+			distanceOptimale = scanneur.nextDouble();
+			capacité = scanneur.nextInt();
 			
-			coords = new double[nbClients + 1][2];
-			demandes = new int[nbClients + 1];
+			coordonnées = new double[nombreClients + 1][2];
+			demandes = new int[nombreClients + 1];
 			
-			sc.nextInt();
-			demandes[0] = sc.nextInt(); // dépôt "0 0"
+			scanneur.nextInt();
+			demandes[0] = scanneur.nextInt(); // dépôt "0 0"
 			
-			for (int i = 1; i <= nbClients; i++)
+			for (int cpt = 1; cpt <= nombreClients; cpt++)
 			{
-				sc.nextInt();
-				coords[i][0] = sc.nextDouble();
-				coords[i][1] = sc.nextDouble();
-				demandes[i] = sc.nextInt();
+				scanneur.nextInt();
+				coordonnées[cpt][0] = scanneur.nextDouble();
+				coordonnées[cpt][1] = scanneur.nextDouble();
+				demandes[cpt] = scanneur.nextInt();
 			}
 		}
 		catch (Exception e)
@@ -42,52 +42,52 @@ public class VRPData
 			throw new RuntimeException("Erreur chargement : " + e.getMessage());
 		}
 
-		int n = nbClients + 1;
-		dist = new double[n][n];
+		int nombreNoeuds = nombreClients + 1;
+		matriceDistances = new double[nombreNoeuds][nombreNoeuds];
 		
-		for (int i = 0; i < n; i++)
+		for (int cpt1 = 0; cpt1 < nombreNoeuds; cpt1++)
 		{
-			for (int j = i + 1; j < n; j++)
+			for (int cpt2 = cpt1 + 1; cpt2 < nombreNoeuds; cpt2++)
 			{
-				double dx = coords[i][0] - coords[j][0];
-				double dy = coords[i][1] - coords[j][1];
-				dist[i][j] = dist[j][i] = Math.sqrt(dx * dx + dy * dy);
+				double différenceX = coordonnées[cpt1][0] - coordonnées[cpt2][0];
+				double différenceY = coordonnées[cpt1][1] - coordonnées[cpt2][1];
+				matriceDistances[cpt1][cpt2] = matriceDistances[cpt2][cpt1] = Math.sqrt(différenceX * différenceX + différenceY * différenceY);
 			}
 		}
 	}
 
-	public double dist(int i, int j)
+	public double obtenirDistance(int noeud1, int noeud2)
 	{
-		return dist[i][j];
+		return matriceDistances[noeud1][noeud2];
 	}
 
-	public int getNbClients()
+	public int getNombreClients()
 	{
-		return nbClients;
+		return nombreClients;
 	}
 
-	public int getCapacite()
+	public int getCapacité()
 	{
-		return capacite;
+		return capacité;
 	}
 
 	public double getDistanceOptimale()
 	{
-		return distOpt;
+		return distanceOptimale;
 	}
 
-	public int getDemande(int c)
+	public int getDemande(int client)
 	{
-		return demandes[c];
+		return demandes[client];
 	}
 
-	public double getX(int i)
+	public double getCoordX(int noeud)
 	{
-		return coords[i][0];
+		return coordonnées[noeud][0];
 	}
 
-	public double getY(int i)
+	public double getCoordY(int noeud)
 	{
-		return coords[i][1];
+		return coordonnées[noeud][1];
 	}
 }

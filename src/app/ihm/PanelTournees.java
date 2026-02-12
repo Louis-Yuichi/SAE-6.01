@@ -63,50 +63,50 @@ public class PanelTournees extends JPanel
 		double minY = Double.MAX_VALUE;
 		double maxY = -Double.MAX_VALUE;
 		
-		for (int i = 0; i <= nbNoeuds; i++) {
-			minX = Math.min(minX, xs[i]);
-			maxX = Math.max(maxX, xs[i]);
-			minY = Math.min(minY, ys[i]);
-			maxY = Math.max(maxY, ys[i]);
+		for (int cpt = 0; cpt <= nbNoeuds; cpt++) {
+			minX = Math.min(minX, xs[cpt]);
+			maxX = Math.max(maxX, xs[cpt]);
+			minY = Math.min(minY, ys[cpt]);
+			maxY = Math.max(maxY, ys[cpt]);
 		}
 		
 		double rx = Math.max(maxX - minX, 1);
 		double ry = Math.max(maxY - minY, 1);
 
 		// Dessin des tournées
-		for (int t = 0; t < tournees.size(); t++) {
-			Color col = COLS[t % COLS.length];
-			g2.setColor(col);
+		for (int cptTournée = 0; cptTournée < tournees.size(); cptTournée++) {
+			Color couleur = COLS[cptTournée % COLS.length];
+			g2.setColor(couleur);
 			g2.setStroke(new BasicStroke(2));
 			
-			List<Integer> tour = tournees.get(t);
+			List<Integer> tournée = tournees.get(cptTournée);
 			
-			if (tour.isEmpty()) {
+			if (tournée.isEmpty()) {
 				continue;
 			}
 			
-			int px = 30 + (int)((xs[0] - minX) / rx * w);
-			int py = 30 + (int)((ys[0] - minY) / ry * h);
-			int prevX = px;
-			int prevY = py;
+			int coordX = 30 + (int)((xs[0] - minX) / rx * w);
+			int coordY = 30 + (int)((ys[0] - minY) / ry * h);
+			int coordPrécédenteX = coordX;
+			int coordPrécédenteY = coordY;
 			
-			for (int c : tour) {
-				int cx = 30 + (int)((xs[c] - minX) / rx * w);
-				int cy = 30 + (int)((ys[c] - minY) / ry * h);
+			for (int client : tournée) {
+				int coordClientX = 30 + (int)((xs[client] - minX) / rx * w);
+				int coordClientY = 30 + (int)((ys[client] - minY) / ry * h);
 				
-				g2.drawLine(prevX, prevY, cx, cy);
-				g2.fillOval(cx - 5, cy - 5, 10, 10);
+				g2.drawLine(coordPrécédenteX, coordPrécédenteY, coordClientX, coordClientY);
+				g2.fillOval(coordClientX - 5, coordClientY - 5, 10, 10);
 				
 				g2.setColor(Color.BLACK);
 				g2.setFont(new Font("Arial", Font.PLAIN, 9));
-				g2.drawString(String.valueOf(c), cx + 6, cy - 2);
-				g2.setColor(col);
+				g2.drawString(String.valueOf(client), coordClientX + 6, coordClientY - 2);
+				g2.setColor(couleur);
 				
-				prevX = cx;
-				prevY = cy;
+				coordPrécédenteX = coordClientX;
+				coordPrécédenteY = coordClientY;
 			}
 			
-			g2.drawLine(prevX, prevY, px, py);
+			g2.drawLine(coordPrécédenteX, coordPrécédenteY, coordX, coordY);
 		}
 		
 		// Dessin du dépôt

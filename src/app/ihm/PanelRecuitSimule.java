@@ -226,12 +226,12 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 		}
 		
 		if (e.getSource() == btnArreter) {
-			ctrl.arreterRecuit();
+			ctrl.arrêterRecuit();
 		}
 	}
 
 	private void lancer() {
-		if (!ctrl.isDataCharge()) {
+		if (!ctrl.estDonnéesChargées()) {
 			try {
 				ctrl.chargerVRP(txtFichier.getText().trim());
 			} catch (Exception ex) {
@@ -240,17 +240,17 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 			}
 		}
 		
-		double t0 = Double.parseDouble(txtT0.getText().trim());
-		double tm = Double.parseDouble(txtTMin.getText().trim());
-		double al = Double.parseDouble(txtAlpha.getText().trim());
-		int pal = Integer.parseInt(txtPalier.getText().trim());
-		int msa = Integer.parseInt(txtMaxSA.getText().trim());
-		int veh = Integer.parseInt(txtNbVeh.getText().trim());
+		double températureInitiale = Double.parseDouble(txtT0.getText().trim());
+		double températureMinimale = Double.parseDouble(txtTMin.getText().trim());
+		double coefficientRefroidissement = Double.parseDouble(txtAlpha.getText().trim());
+		int nombreItérationsPalier = Integer.parseInt(txtPalier.getText().trim());
+		int nombreMaxItérationsSansAmélioration = Integer.parseInt(txtMaxSA.getText().trim());
+		int nombreMaxVéhicules = Integer.parseInt(txtNbVeh.getText().trim());
 		
 		txtLog.setText("");
 		panelGraph.effacer();
 		
-		ctrl.lancerRecuit(t0, tm, al, pal, msa, veh, chkMeilleur.isSelected());
+		ctrl.lancerRecuit(températureInitiale, températureMinimale, coefficientRefroidissement, nombreItérationsPalier, nombreMaxItérationsSansAmélioration, nombreMaxVéhicules, chkMeilleur.isSelected());
 	}
 
 	/* ── Méthodes appelées par le Controleur ── */

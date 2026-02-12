@@ -7,136 +7,136 @@ public class RecuitSimule
 {
 	public interface Callback
 	{
-		void onIteration(int iter, VRPSolution courante, VRPSolution meilleure, double temp);
-		void onTermine(VRPSolution meilleure, long tempsMs);
+		void surItération(int numéroItération, VRPSolution solutionCourante, VRPSolution meilleureSolution, double température);
+		void surTerminaison(VRPSolution meilleureSolution, long duréeMillisecondes);
 	}
 
-	private          VRPData  data;
-	private          double   t0, tMin, alpha;
-	private          int      palier, maxSansAmelio, maxVeh;
-	private          boolean  choixMeilleur;
-	private          Callback callback;
-	private volatile boolean arrete;
+	private          VRPData  donnéesVRP;
+	private          double   températureInitiale, températureMinimale, coefficientRefroidissement;
+	private          int      nombreItérationsPalier, nombreMaxItérationsSansAmélioration, nombreMaxVéhicules;
+	private          boolean  choisirMeilleurVoisin;
+	private          Callback fonctionCallback;
+	private volatile boolean estArrêté;
 
-	public RecuitSimule( VRPData data, double t0, double tMin, double alpha, int palier, int maxSansAmelio, int maxVeh, boolean choixMeilleur)
+	public RecuitSimule( VRPData donnéesVRP, double températureInitiale, double températureMinimale, double coefficientRefroidissement, int nombreItérationsPalier, int nombreMaxItérationsSansAmélioration, int nombreMaxVéhicules, boolean choisirMeilleurVoisin)
 	{
-		this.data = data; this.t0 = t0; this.tMin = tMin; this.alpha = alpha;
-		this.palier = palier; this.maxSansAmelio = maxSansAmelio;
-		this.maxVeh = maxVeh; this.choixMeilleur = choixMeilleur;
+		this.donnéesVRP = donnéesVRP; this.températureInitiale = températureInitiale; this.températureMinimale = températureMinimale; this.coefficientRefroidissement = coefficientRefroidissement;
+		this.nombreItérationsPalier = nombreItérationsPalier; this.nombreMaxItérationsSansAmélioration = nombreMaxItérationsSansAmélioration;
+		this.nombreMaxVéhicules = nombreMaxVéhicules; this.choisirMeilleurVoisin = choisirMeilleurVoisin;
 	}
 
-	public void setCallback(Callback cb) { this.callback = cb  ; }
-	public void arreter()                { this.arrete   = true; }
+	public void définirCallback(Callback callback) { this.fonctionCallback = callback  ; }
+	public void arrêter()                        { this.estArrêté       = true; }
 
 	/**
 	 * Exécute l'algorithme de recuit simulé.
 	 * @return La meilleure solution trouvée
 	 */
-	public VRPSolution executer()
+	public VRPSolution exécuter()
 	{
-		long   debut = System.currentTimeMillis();
-		Random rng   = new Random();
+		long   instantDébut = System.currentTimeMillis();
+		Random générateurAléatoire   = new Random();
 
 		// 1. Solution initiale aléatoire
-		VRPSolution courante  = VRPSolution.genererAleatoire(data, maxVeh, rng);
-		VRPSolution meilleure = courante.copier();
+		VRPSolution solutionCourante  = VRPSolution.générerSolutionInitiale(donnéesVRP, nombreMaxVéhicules, générateurAléatoire);
+		VRPSolution meilleureSolution = solutionCourante.copierSolution();
 
 		// 2. Paramètres du recuit
-		double temp       = t0;                      // Température initiale
-		int    sansAmelio = 0;                       // Compteur sans amélioration
-		int    iter       = 0;                       // Compteur d'itérations
-		int    maxTent    = 2 * data.getNbClients(); // Taille max du voisinage (2n)
+		double température       = températureInitiale;                      // Température initiale
+		int    compteurSansAmélioration = 0;                       // Compteur sans amélioration
+		int    compteurItérations       = 0;                       // Compteur d'itérations
+		int    nombreMaxTentatives    = 2 * donnéesVRP.getNombreClients(); // Taille max du voisinage (2n)
 
 		// 3. Boucle principale : tant que T > Tmin et pas trop longtemps sans amélioration
-		while (temp > tMin && sansAmelio < maxSansAmelio && !arrete)
+		while (température > températureMinimale && compteurSansAmélioration < nombreMaxItérationsSansAmélioration && !estArrêté)
 		{
-			boolean ameliore = false;
+			boolean améliorationTrouvée = false;
 
 			// Palier : nombre d'itérations à température constante
-			for (int p = 0; p < palier && !arrete; p++)
+			for (int cptPalier = 0; cptPalier < nombreItérationsPalier && !estArrêté; cptPalier++)
 			{
 				// Chercher un voisin (aléatoire ou meilleur parmi 2n)
-				VRPSolution voisine = choisirVoisin(courante, rng, maxTent);
+				VRPSolution solutionVoisine = choisirVoisin(solutionCourante, générateurAléatoire, nombreMaxTentatives);
 
 				// Si aucun voisin faisable trouvé, passer à l'itération suivante
-				if (voisine == null)
+				if (solutionVoisine == null)
 					continue;
 
 				// Critère de Metropolis : accepter si meilleur OU avec probabilité exp(-ΔE/T)
-				double dE = voisine.getCout() - courante.getCout();
+				double différenceCoût = solutionVoisine.getCoutTotal() - solutionCourante.getCoutTotal();
 
-				if (dE <= 0 || rng.nextDouble() < Math.exp(-dE / temp))
+				if (différenceCoût <= 0 || générateurAléatoire.nextDouble() < Math.exp(-différenceCoût / température))
 				{
-					courante = voisine; // Accepter la solution voisine
+					solutionCourante = solutionVoisine; // Accepter la solution voisine
 
 					// Si nouveau meilleur global, sauvegarder
-					if (courante.getCout() < meilleure.getCout())
+					if (solutionCourante.getCoutTotal() < meilleureSolution.getCoutTotal())
 					{
-						meilleure = courante.copier();
-						ameliore  = true;
+						meilleureSolution = solutionCourante.copierSolution();
+						améliorationTrouvée  = true;
 					}
 				}
-				iter++;
+				compteurItérations++;
 			}
 
 			// Mise à jour des compteurs et refroidissement
-			sansAmelio = ameliore ? 0 : sansAmelio + 1;
-			temp      *= alpha;
+			compteurSansAmélioration = améliorationTrouvée ? 0 : compteurSansAmélioration + 1;
+			température      *= coefficientRefroidissement;
 
 			// Notifier l'IHM
-			if (callback != null)
-				callback.onIteration(iter, courante, meilleure, temp);
+			if (fonctionCallback != null)
+				fonctionCallback.surItération(compteurItérations, solutionCourante, meilleureSolution, température);
 		}
 
-		long ms = System.currentTimeMillis() - debut;
+		long duréeMillisecondes = System.currentTimeMillis() - instantDébut;
 
-		if (callback != null)
-			callback.onTermine(meilleure, ms);
+		if (fonctionCallback != null)
+				fonctionCallback.surTerminaison(meilleureSolution, duréeMillisecondes);
 
-		return meilleure;
+		return meilleureSolution;
 	}
 
 	/**
 	 * Choisit un voisin selon le mode configuré.
 	 * Mode MEILLEUR : explore jusqu'à 2n voisins faisables et retourne le meilleur.
 	 * Mode ALÉATOIRE : retourne le premier voisin faisable trouvé.
-	 * @return Un voisin faisable ou null si aucun trouvé après maxTent tentatives
+	 * @return Un voisin faisable ou null si aucun trouvé après nombreMaxTentatives tentatives
 	 */
-	private VRPSolution choisirVoisin(VRPSolution courante, Random rng, int maxTent)
+	private VRPSolution choisirVoisin(VRPSolution solutionCourante, Random générateurAléatoire, int nombreMaxTentatives)
 	{
-		if (choixMeilleur)
+		if (choisirMeilleurVoisin)
 		{
 			// Mode MEILLEUR : chercher le meilleur parmi 2n voisins faisables
-			VRPSolution best = null;
-			int         nb   = 0;
+			VRPSolution meilleurVoisin = null;
+			int         nombreVoisinsTrouvés   = 0;
 
-			for (int t = 0; t < maxTent * 3 && nb < maxTent; t++)
+			for (int cptTentatives = 0; cptTentatives < nombreMaxTentatives * 3 && nombreVoisinsTrouvés < nombreMaxTentatives; cptTentatives++)
 			{
-				VRPSolution v = courante.voisin(rng);
+				VRPSolution solutionVoisine = solutionCourante.générerVoisin(générateurAléatoire);
 
-				if (v == null)
+				if (solutionVoisine == null)
 					continue; // Voisin infaisable, réessayer
 
-				if (best == null || v.getCout() < best.getCout())
-					best = v;
+				if (meilleurVoisin == null || solutionVoisine.getCoutTotal() < meilleurVoisin.getCoutTotal())
+					meilleurVoisin = solutionVoisine;
 
-				nb++; // Compter les voisins faisables trouvés
+				nombreVoisinsTrouvés++; // Compter les voisins faisables trouvés
 			}
 
-			return best;
+			return meilleurVoisin;
 		}
 		else
 		{
 			// Mode ALÉATOIRE : retourner le premier voisin faisable
-			for (int t = 0; t < maxTent; t++)
+			for (int cptTentatives = 0; cptTentatives < nombreMaxTentatives; cptTentatives++)
 			{
-				VRPSolution v = courante.voisin(rng);
+				VRPSolution solutionVoisine = solutionCourante.générerVoisin(générateurAléatoire);
 
-				if (v != null)
-					return v;
+				if (solutionVoisine != null)
+					return solutionVoisine;
 			}
 
-			return null; // Aucun voisin faisable après maxTent tentatives
+			return null; // Aucun voisin faisable après nombreMaxTentatives tentatives
 		}
 	}
 }

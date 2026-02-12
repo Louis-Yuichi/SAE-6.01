@@ -285,11 +285,11 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 		if (e.getSource() == this.btnCharger)
 		{
-			String source = this.txtSource.getText().trim();
+			String cheminSource = this.txtSource.getText().trim();
 
-			if (source.isEmpty())
+			if (cheminSource.isEmpty())
 			{
-				this.lblStatut.setText(" Veuillez selectionner un fichier source");
+				this.lblStatut.setText(" Veuillez completer le champ source");
 				this.lblStatut.setForeground(new Color(231, 76, 60));
 				return;
 			}
@@ -299,14 +299,14 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 			try
 			{
-				String contenu = this.ctrl.getFichierTxt(source);
-				this.txtContenu.setText(contenu);
+				String contenuTexte = this.ctrl.obtenirFichierTexte(cheminSource);
+				this.txtContenu.setText(contenuTexte);
 				
 				// Générer la prévisualisation du .dat
-				String contenuDat = this.ctrl.getFichierDat(source);
+				String contenuDat = this.ctrl.obtenirFichierDat(cheminSource);
 				this.txtPreviewDat.setText(contenuDat);
 				
-				this.lblStatut.setText(" Fichier charge : " + new File(source).getName());
+				this.lblStatut.setText(" Fichier charge : " + new File(cheminSource).getName());
 				this.lblStatut.setForeground(new Color(39, 174, 96));
 				this.panelStats.setVisible(false);
 			}
@@ -319,10 +319,10 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 		if (e.getSource() == this.btnGenerer)
 		{
-			String source = this.txtSource.getText().trim();
-			String dest   = this.txtDest  .getText().trim();
+			String cheminSource = this.txtSource.getText().trim();
+			String cheminDestination   = this.txtDest  .getText().trim();
 
-			if (source.isEmpty() || dest.isEmpty())
+			if (cheminSource.isEmpty() || cheminDestination.isEmpty())
 			{
 				this.lblStatut.setText(" Veuillez completer les champs");
 				this.lblStatut.setForeground(new Color(231, 76, 60));
@@ -334,19 +334,19 @@ public class PanelPrincipal extends JPanel implements ActionListener
 
 			try
 			{
-				this.ctrl.chargerFichiers(source, dest);
-				
-				int    nbClients = this.ctrl.getNbClients();
-				int    qMax      = this.ctrl.getQMax();
-				double distOpt   = this.ctrl.getDistanceOptimal();
+this.ctrl.chargerFichiers(cheminSource, cheminDestination);
 
-				this.lblNbClients  .setText(String.valueOf(nbClients));
-				this.lblQMax       .setText(String.valueOf(qMax));
-				this.lblDistanceOpt.setText(String.format("%.2f", distOpt));
+				int    nombreClients = this.ctrl.obtenirNombreClients();
+				int    capacitéMax      = this.ctrl.obtenirCapacitéMax();
+				double distanceOptimale   = this.ctrl.obtenirDistanceOptimale();
+
+				this.lblNbClients  .setText(String.valueOf(nombreClients));
+				this.lblQMax       .setText(String.valueOf(capacitéMax));
+				this.lblDistanceOpt.setText(String.format("%.2f", distanceOptimale));
 
 				this.panelStats.setVisible(true);
 
-				this.lblStatut.setText(" Fichier genere avec succes : " + new File(dest).getName());
+				this.lblStatut.setText(" Fichier genere avec succes : " + new File(cheminDestination).getName());
 				this.lblStatut.setForeground(new Color(39, 174, 96));
 			}
 			catch (Exception ex)
