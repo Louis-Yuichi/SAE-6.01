@@ -9,17 +9,17 @@ import app.ihm.FramePrincipal;
 
 public class Controleur implements RecuitSimule.Callback
 {
-	private Convertion     convertion;
+	private Convertion convertion;
 
-	private VRPData        donneesVRP;
+	private VRPData donneesVRP;
 
-	private RecuitSimule   recuitSimule;
+	private RecuitSimule recuitSimule;
 
 	private FramePrincipal fenetrePrincipale;
 
 	public Controleur()
 	{
-		this.convertion        = new Convertion();
+		this.convertion = new Convertion();
 		this.fenetrePrincipale = new FramePrincipal(this);
 	}
 
@@ -56,8 +56,9 @@ public class Controleur implements RecuitSimule.Callback
 	public void chargerVRP(String cheminFichier)
 	{
 		this.donneesVRP = new VRPData(cheminFichier);
-		fenetrePrincipale.getPanelRecuit().ajouterLigneJournal("Charge : " + this.donneesVRP.getNombreClients() + " clients, capacité=" + 
-		                                                         this.donneesVRP.getCapacite() + ", optimal=" + this.donneesVRP.getDistanceOptimale());
+		fenetrePrincipale.getPanelRecuit()
+				.ajouterLigneJournal("Charge : " + this.donneesVRP.getNombreClients() + " clients, capacité="
+						+ this.donneesVRP.getCapacite() + ", optimal=" + this.donneesVRP.getDistanceOptimale());
 	}
 
 	public boolean estDonneesChargees()
@@ -65,20 +66,23 @@ public class Controleur implements RecuitSimule.Callback
 		return this.donneesVRP != null;
 	}
 
-	public void lancerRecuit(double temperatureInitiale, double temperatureMinimale, double coefficientRefroidissement, int nombreIterationsPalier,
-							 int nombreMaxIterationsSansAmelioration, int nombreMaxVehicules, boolean choisirMeilleurVoisin)
+	public void lancerRecuit(double temperatureInitiale, double temperatureMinimale, double coefficientRefroidissement,
+			int nombreIterationsPalier, int nombreMaxIterationsSansAmelioration, int nombreMaxVehicules,
+			boolean choisirMeilleurVoisin)
 	{
-		this.recuitSimule = new RecuitSimule(this.donneesVRP, temperatureInitiale, temperatureMinimale, coefficientRefroidissement, 
-											 nombreIterationsPalier, nombreMaxIterationsSansAmelioration, nombreMaxVehicules, choisirMeilleurVoisin);
+		this.recuitSimule = new RecuitSimule(this.donneesVRP, temperatureInitiale, temperatureMinimale,
+				coefficientRefroidissement, nombreIterationsPalier, nombreMaxIterationsSansAmelioration,
+				nombreMaxVehicules, choisirMeilleurVoisin);
 
 		this.recuitSimule.definirCallback(this);
 
 		this.fenetrePrincipale.getPanelRecuit().definirEtatExecution(true);
-		this.fenetrePrincipale.getPanelRecuit().ajouterLigneJournal(String.format("Démarrage — T0=%.1f Tmin=%.4f α=%.2f palier=%d maxSA=%d véh=%d voisin=%s",
-		                                                         temperatureInitiale, temperatureMinimale, coefficientRefroidissement, 
-		                                                         nombreIterationsPalier, nombreMaxIterationsSansAmelioration, nombreMaxVehicules, 
-		                                                         choisirMeilleurVoisin ? "meilleur" : "aléatoire"));
-		this.recuitSimule.executer();
+		this.fenetrePrincipale.getPanelRecuit().ajouterLigneJournal(
+				String.format("Démarrage — T0=%.1f Tmin=%.4f α=%.2f palier=%d maxSA=%d véh=%d voisin=%s",
+						temperatureInitiale, temperatureMinimale, coefficientRefroidissement, nombreIterationsPalier,
+						nombreMaxIterationsSansAmelioration, nombreMaxVehicules,
+						choisirMeilleurVoisin ? "meilleur" : "aléatoire"));
+		new Thread(() -> this.recuitSimule.executer()).start();
 	}
 
 	public void arreterRecuit()
@@ -89,10 +93,11 @@ public class Controleur implements RecuitSimule.Callback
 		}
 	}
 
-	public void surIteration(int numeroIteration, VRPSolution solutionCourante, VRPSolution meilleureSolution, double temperature)
+	public void surIteration(int numeroIteration, VRPSolution solutionCourante, VRPSolution meilleureSolution,
+			double temperature)
 	{
-		fenetrePrincipale.getPanelRecuit().majIteration(numeroIteration, solutionCourante.getCoutTotal(), meilleureSolution.getCoutTotal(),
-														meilleureSolution.getNombreTournees(), temperature);
+		fenetrePrincipale.getPanelRecuit().majIteration(numeroIteration, solutionCourante.getCoutTotal(),
+				meilleureSolution.getCoutTotal(), meilleureSolution.getNombreTournees(), temperature);
 	}
 
 	public void surTerminaison(VRPSolution meilleureSolution, long dureeMillisecondes)
@@ -108,10 +113,12 @@ public class Controleur implements RecuitSimule.Callback
 			coordonneesY[cpt] = donneesVRP.getCoordY(cpt);
 		}
 
-		fenetrePrincipale.getPanelRecuit().majTerminaison(meilleureSolution.getCoutTotal(), meilleureSolution.toString(), dureeMillisecondes, donneesVRP.getDistanceOptimale(), 
-														  meilleureSolution.getNombreTournees(), donneesVRP.getNombreClients());
+		fenetrePrincipale.getPanelRecuit().majTerminaison(meilleureSolution.getCoutTotal(),
+				meilleureSolution.toString(), dureeMillisecondes, donneesVRP.getDistanceOptimale(),
+				meilleureSolution.getNombreTournees(), donneesVRP.getNombreClients());
 
-		fenetrePrincipale.getPanelRecuit().majGraphique(coordonneesX, coordonneesY, meilleureSolution.getTournees(), nombreClients);
+		fenetrePrincipale.getPanelRecuit().majGraphique(coordonneesX, coordonneesY, meilleureSolution.getTournees(),
+				nombreClients);
 	}
 
 	public String lireFichierTexte(String cheminFichier)
