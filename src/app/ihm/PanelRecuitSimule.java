@@ -14,11 +14,14 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import java.io.File;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -26,6 +29,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class PanelRecuitSimule extends JPanel implements ActionListener
 {
@@ -44,6 +48,7 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 	private JCheckBox  chkMeilleurVoisin;
 
 	private JButton    btnCharger;
+	private JButton    btnParcourir;
 	private JButton    btnLancer;
 	private JButton    btnArreter;
 
@@ -55,6 +60,8 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 	private JLabel     lblVehicules;
 	private JLabel     lblTempsDuree;
 
+	private JFileChooser fileChooser;
+
 	public PanelRecuitSimule(Controleur ctrl)
 	{
 		this.ctrl = ctrl;
@@ -62,6 +69,10 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 		this.setLayout(new BorderLayout(10, 10));
 		this.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		this.setBackground(new Color(245, 245, 250));
+
+		this.fileChooser = new JFileChooser();
+		this.fileChooser.setCurrentDirectory(new File("src/app/data"));
+		this.fileChooser.setFileFilter(new FileNameExtensionFilter("Fichiers texte (*.txt)", "txt"));
 		
 		this.add(this.creerPanelSuperieur(), BorderLayout.NORTH);
 		this.add(this.creerPanelCentral(), BorderLayout.CENTER);
@@ -96,9 +107,10 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 		this.txtMaxSansAmelioration = this.creerChampTexte("15");
 		this.txtNombreVehicules     = this.creerChampTexte("10");
 		
-		this.btnCharger = this.creerBouton("Charger", new Color(39, 174, 96));
-		this.btnLancer  = this.creerBouton("Lancer",  new Color(41, 128, 185));
-		this.btnArreter = this.creerBouton("Arrêter", new Color(192, 57, 43));
+		this.btnCharger   = this.creerBouton("Charger",   new Color(39, 174, 96));
+		this.btnParcourir = this.creerBouton("Parcourir", new Color(142, 68, 173));
+		this.btnLancer    = this.creerBouton("Lancer",    new Color(41, 128, 185));
+		this.btnArreter   = this.creerBouton("Arrêter",   new Color(192, 57, 43));
 
 		JPanel panelParamètres = new JPanel();
 		panelParamètres.setLayout(new BoxLayout(panelParamètres, BoxLayout.Y_AXIS));
@@ -113,7 +125,13 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 		panelLigneFichier.setOpaque(false);
 		panelLigneFichier.add(this.creerEtiquette("Fichier :"), BorderLayout.WEST);
 		panelLigneFichier.add(this.txtFichier, BorderLayout.CENTER);
-		panelLigneFichier.add(this.btnCharger, BorderLayout.EAST);
+		
+		JPanel panelBoutonsFichier = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+		panelBoutonsFichier.setOpaque(false);
+		panelBoutonsFichier.add(this.btnParcourir);
+		panelBoutonsFichier.add(this.btnCharger);
+		panelLigneFichier.add(panelBoutonsFichier, BorderLayout.EAST);
+		
 		panelParamètres.add(panelLigneFichier);
 		panelParamètres.add(Box.createVerticalStrut(10));
 
@@ -248,6 +266,17 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 
 	public void actionPerformed(ActionEvent evenement)
 	{
+		if (evenement.getSource() == this.btnParcourir)
+		{
+			int resultat = this.fileChooser.showOpenDialog(this);
+			if (resultat == JFileChooser.APPROVE_OPTION)
+			{
+				File fichierSelectionne = this.fileChooser.getSelectedFile();
+				this.txtFichier.setText(fichierSelectionne.getPath());
+				this.ajouterLigneJournal("Fichier sélectionné : " + fichierSelectionne.getName());
+			}
+		}
+
 		if (evenement.getSource() == this.btnCharger)
 		{
 			try
@@ -298,8 +327,8 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 		this.panelGraphique.effacer();
 		
 		this.ctrl.lancerRecuit(temperatureInitiale, temperatureMinimale, coefficientRefroidissement,
-							   nombreIterationsPalier, nombreMaxIterationsSansAmelioration, nombreMaxVehicules,
-							   this.chkMeilleurVoisin.isSelected());
+							nombreIterationsPalier, nombreMaxIterationsSansAmelioration, nombreMaxVehicules,
+							this.chkMeilleurVoisin.isSelected());
 	}
 
 	public void ajouterLigneJournal(String message)
@@ -328,7 +357,7 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 	}
 
 	public void majTerminaison(double coutFinal, String detailsSolution, long dureeMillisecondes, 
-							   double coutOptimal, int nombreVehicules, int nombreClients)
+							double coutOptimal, int nombreVehicules, int nombreClients)
 	{
 		SwingUtilities.invokeLater(() ->
 		{
