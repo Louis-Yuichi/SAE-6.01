@@ -78,7 +78,7 @@ public class Controleur implements RecuitSimule.Callback
 		                                                         temperatureInitiale, temperatureMinimale, coefficientRefroidissement, 
 		                                                         nombreIterationsPalier, nombreMaxIterationsSansAmelioration, nombreMaxVehicules, 
 		                                                         choisirMeilleurVoisin ? "meilleur" : "aléatoire"));
-		new Thread(() -> this.recuitSimule.executer()).start();
+		this.recuitSimule.executer();
 	}
 
 	public void arreterRecuit()
