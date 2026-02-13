@@ -5,12 +5,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
+/**
+ * Représente une solution au problème VRP (Vehicle Routing Problem).
+ * Contient une liste de tournées et calcule le coût total associé.
+ */
 public class VRPSolution
 {
-	private List<List<Integer>> listeTournees;
-	private double              coutTotal;
-	private VRPData             donneesVRP;
+	private List<List<Integer>> listeTournees; // Liste des tournées, chaque tournée contient les IDs des clients
+	private double              coutTotal;     // Coût total de la solution (distance totale parcourue)
+	private VRPData             donneesVRP;    // Données du problème VRP
 
+	/**
+	 * Construit une solution VRP avec les tournées données.
+	 * @param donneesVRP Données du problème (distances, demandes, capacités)
+	 * @param listeTournees Liste des tournées (chaque tournée = liste d'IDs clients)
+	 */
 	public VRPSolution(VRPData donneesVRP, List<List<Integer>> listeTournees)
 	{
 		this.donneesVRP     = donneesVRP;
@@ -18,8 +27,17 @@ public class VRPSolution
 		this.coutTotal      = this.calculerCoutTotal();
 	}
 
+	/**
+	 * Génère une solution initiale aléatoire en distribuant les clients dans des tournées.
+	 * Respecte la contrainte de capacité des véhicules.
+	 * @param donneesVRP Données du problème VRP
+	 * @param nombreMaxVehicules Nombre maximum de véhicules autorisés
+	 * @param generateur Générateur de nombres aléatoires
+	 * @return Une solution initiale valide
+	 */
 	public static VRPSolution genererSolutionInitiale(VRPData donneesVRP, int nombreMaxVehicules, Random generateur)
 	{
+		// Créer une liste de tous les clients
 		List<Integer> listeClients = new ArrayList<>();
 
 		for (int cpt = 1; cpt <= donneesVRP.getNombreClients(); cpt++)
@@ -27,14 +45,18 @@ public class VRPSolution
 			listeClients.add(cpt);
 		}
 
+		// Mélanger aléatoirement les clients
 		Collections.shuffle(listeClients, generateur);
 
 		List<List<Integer>> listeTournees  = new ArrayList<>();
 		List<Integer>       tourneeEnCours = new ArrayList<>();
 
 		int chargeActuelle = 0;
+		
+		// Distribuer les clients dans des tournées en respectant la capacité
 		for (int client : listeClients)
 		{
+			// Si ajout du client dépasse la capacité et on n'a pas atteint le max de véhicules
 			if (listeTournees.size() < nombreMaxVehicules - 1 && chargeActuelle + donneesVRP.getDemande(client) > donneesVRP.getCapacite())
 			{
 				if (!tourneeEnCours.isEmpty())
@@ -50,6 +72,7 @@ public class VRPSolution
 			chargeActuelle += donneesVRP.getDemande(client);
 		}
 
+		// Ajouter la dernière tournée si non vide
 		if (!tourneeEnCours.isEmpty())
 		{
 			listeTournees.add(tourneeEnCours);
@@ -58,6 +81,10 @@ public class VRPSolution
 		return new VRPSolution(donneesVRP, listeTournees);
 	}
 
+	/**
+	 * Crée une copie profonde de cette solution.
+	 * @return Une nouvelle instance de VRPSolution identique
+	 */
 	public VRPSolution copierSolution()
 	{
 		List<List<Integer>> copieTournees = new ArrayList<>();
@@ -70,6 +97,12 @@ public class VRPSolution
 		return new VRPSolution(this.donneesVRP, copieTournees);
 	}
 
+	/**
+	 * Génère une solution voisine en appliquant aléatoirement un opérateur de transformation.
+	 * Trois opérateurs possibles : échange, déplacement, 2-opt.
+	 * @param generateur Générateur de nombres aléatoires
+	 * @return Une solution voisine, ou null si impossible de générer un voisin
+	 */
 	public VRPSolution genererVoisin(Random generateur)
 	{
 		switch (generateur.nextInt(3))
@@ -80,6 +113,14 @@ public class VRPSolution
 		}
 	}
 
+	/**
+	 * Génère un voisin par échange de deux clients (intra ou inter-tournée).
+	 * - Échange intra-tournée : échange deux clients dans la même tournée
+	 * - Échange inter-tournée : échange deux clients entre deux tournées différentes
+	 * Vérifie les contraintes de capacité pour l'échange inter-tournée.
+	 * @param generateur Générateur de nombres aléatoires
+	 * @return Une solution voisine, ou null si impossible
+	 */
 	private VRPSolution genererVoisinParechange(Random generateur)
 	{
 		VRPSolution solutionVoisine = this.copierSolution();
@@ -90,10 +131,12 @@ public class VRPSolution
 			return null;
 		}
 
+		// Décider si échange intra ou inter-tournée
 		boolean echangeIntraTournee = nombreTournees < 2 || generateur.nextBoolean();
 
 		if (echangeIntraTournee)
 		{
+			// Échange intra-tournée : swap deux clients dans la même tournée
 			List<Integer> tournee = solutionVoisine.listeTournees.get(generateur.nextInt(nombreTournees));
 
 			if (tournee.size() < 2)
@@ -114,6 +157,7 @@ public class VRPSolution
 		}
 		else
 		{
+			// Échange inter-tournée : swap deux clients entre deux tournées différentes
 			int indiceTournee1 = generateur.nextInt(nombreTournees);
 			int indiceTournee2;
 
@@ -136,6 +180,7 @@ public class VRPSolution
 			int client1 = tournee1.get(indiceClient1);
 			int client2 = tournee2.get(indiceClient2);
 
+			// Vérifier que l'échange respecte les contraintes de capacité
 			if (this.calculerCharge(tournee1) - this.donneesVRP.getDemande(client1) + this.donneesVRP.getDemande(client2) > this.donneesVRP.getCapacite())
 			{
 				return null;
@@ -155,6 +200,13 @@ public class VRPSolution
 		return solutionVoisine;
 	}
 
+	/**
+	 * Génère un voisin par déplacement d'un client d'une tournée vers une autre.
+	 * Vérifie que la tournée de destination ne dépasse pas sa capacité.
+	 * Supprime les tournées vides après le déplacement.
+	 * @param generateur Générateur de nombres aléatoires
+	 * @return Une solution voisine, ou null si impossible
+	 */
 	private VRPSolution genererVoisinParDeplacement(Random generateur)
 	{
 		VRPSolution solutionVoisine = this.copierSolution();
@@ -173,6 +225,7 @@ public class VRPSolution
 			return null;
 		}
 
+		// Choisir une tournée de destination différente
 		int indiceTourneeDestination;
 
 		do
@@ -186,19 +239,29 @@ public class VRPSolution
 		int indiceClient    = generateur.nextInt(tourneeSource.size());
 		int clientÀDeplacer = tourneeSource.get(indiceClient);
 
+		// Vérifier que la tournée de destination peut accueillir le client
 		if (this.calculerCharge(tourneeDestination) + this.donneesVRP.getDemande(clientÀDeplacer) > this.donneesVRP.getCapacite())
 		{
 			return null;
 		}
 
+		// Déplacer le client
 		tourneeSource.remove(indiceClient);
 		tourneeDestination.add(generateur.nextInt(tourneeDestination.size() + 1), clientÀDeplacer);
+		
+		// Supprimer les tournées vides
 		solutionVoisine.listeTournees.removeIf(List::isEmpty);
 		solutionVoisine.coutTotal = solutionVoisine.calculerCoutTotal();
 
 		return solutionVoisine;
 	}
 
+	/**
+	 * Génère un voisin par 2-opt : inverse l'ordre d'un segment de clients dans une tournée.
+	 * Améliore la séquence de visite des clients sans changer l'affectation aux tournées.
+	 * @param generateur Générateur de nombres aléatoires
+	 * @return Une solution voisine, ou null si impossible
+	 */
 	private VRPSolution genererVoisinPar2Opt(Random generateur)
 	{
 		VRPSolution solutionVoisine = this.copierSolution();
@@ -215,6 +278,7 @@ public class VRPSolution
 			return null;
 		}
 
+		// Choisir deux positions aléatoires et inverser le segment entre elles
 		int indiceDebut = generateur.nextInt(tournee.size() - 1);
 		int indiceFin = indiceDebut + 1 + generateur.nextInt(tournee.size() - indiceDebut - 1);
 
@@ -224,6 +288,11 @@ public class VRPSolution
 		return solutionVoisine;
 	}
 
+	/**
+	 * Calcule la charge totale (somme des demandes) d'une tournée.
+	 * @param tournee La tournée dont on veut calculer la charge
+	 * @return La charge totale de la tournée
+	 */
 	private int calculerCharge(List<Integer> tournee)
 	{
 		int chargeTotal = 0;
@@ -236,6 +305,11 @@ public class VRPSolution
 		return chargeTotal;
 	}
 
+	/**
+	 * Calcule le coût total de la solution (distance totale parcourue par tous les véhicules).
+	 * Pour chaque tournée : dépôt → client1 → client2 → ... → clientN → dépôt.
+	 * @return Le coût total (somme des distances)
+	 */
 	private double calculerCoutTotal()
 	{
 		double coutTotal = 0;
@@ -247,24 +321,33 @@ public class VRPSolution
 				continue;
 			}
 
+			// Distance dépôt → premier client
 			coutTotal += this.donneesVRP.obtenirDistance(0, tournee.get(0));
 
+			// Distances entre clients consécutifs
 			for (int cpt = 0; cpt < tournee.size() - 1; cpt++)
 			{
 				coutTotal += this.donneesVRP.obtenirDistance(tournee.get(cpt), tournee.get(cpt + 1));
 			}
 
+			// Distance dernier client → dépôt
 			coutTotal += this.donneesVRP.obtenirDistance(tournee.get(tournee.size() - 1), 0);
 		}
 		
 		return coutTotal;
 	}
 
+	// Accesseurs
 	public double              getCoutTotal()      { return this.coutTotal;            }
 	public List<List<Integer>> getTournees()       { return this.listeTournees;        }
 	public VRPData             getDonneesVRP()     { return this.donneesVRP;           }
 	public int                 getNombreTournees() { return this.listeTournees.size(); }
 
+	/**
+	 * Représentation textuelle de la solution.
+	 * Affiche le coût, le nombre de tournées et le détail de chaque tournée avec sa charge.
+	 * @return Une chaîne décrivant la solution
+	 */
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder();
