@@ -76,7 +76,7 @@ public class PanelGraphiqueTournees extends JPanel
 		double coordYMinimale = this.coordonneesY[0];
 		double coordYMaximale = this.coordonneesY[0];
 
-		for (int cpt = 1; cpt < this.nombreNoeuds; cpt++)
+		for (int cpt = 1; cpt <= this.nombreNoeuds; cpt++)
 		{
 			if (this.coordonneesX[cpt] < coordXMinimale) coordXMinimale = this.coordonneesX[cpt];
 			if (this.coordonneesX[cpt] > coordXMaximale) coordXMaximale = this.coordonneesX[cpt];
@@ -87,8 +87,8 @@ public class PanelGraphiqueTournees extends JPanel
 		int largeur = this.getWidth()  - 60;
 		int hauteur = this.getHeight() - 60;
 
-		double ratioX = (coordXMaximale - coordXMinimale) / largeur;
-		double ratioY = (coordYMaximale - coordYMinimale) / hauteur;
+		double ratioX = (coordXMaximale - coordXMinimale) > 0 ? largeur / (coordXMaximale - coordXMinimale) : 1;
+		double ratioY = (coordYMaximale - coordYMinimale) > 0 ? hauteur / (coordYMaximale - coordYMinimale) : 1;
 		
 		int couleurIndex = 0;
 		for (List<Integer> tournee : this.listeTournees)
@@ -99,29 +99,29 @@ public class PanelGraphiqueTournees extends JPanel
 			int noeudPrecedent = 0;
 			for (int noeud : tournee)
 			{
-				int coordXDébut = 30 + (int)((this.coordonneesX[noeudPrecedent] - coordXMinimale) / ratioX * largeur);
-				int coordYDébut = 30 + (int)((this.coordonneesY[noeudPrecedent] - coordYMinimale) / ratioY * hauteur);
-				int coordXFin   = 30 + (int)((this.coordonneesX[noeud]          - coordXMinimale) / ratioX * largeur);
-				int coordYFin   = 30 + (int)((this.coordonneesY[noeud]          - coordYMinimale) / ratioY * hauteur);
+				int coordXDébut = 30 + (int)((this.coordonneesX[noeudPrecedent] - coordXMinimale) * ratioX);
+				int coordYDébut = 30 + (int)((this.coordonneesY[noeudPrecedent] - coordYMinimale) * ratioY);
+				int coordXFin   = 30 + (int)((this.coordonneesX[noeud]          - coordXMinimale) * ratioX);
+				int coordYFin   = 30 + (int)((this.coordonneesY[noeud]          - coordYMinimale) * ratioY);
 
 				graphique2D.drawLine(coordXDébut, coordYDébut, coordXFin, coordYFin);
 				noeudPrecedent = noeud;
 			}
 			
-			int coordXDébut = 30 + (int)((this.coordonneesX[noeudPrecedent] - coordXMinimale) / ratioX * largeur);
-			int coordYDébut = 30 + (int)((this.coordonneesY[noeudPrecedent] - coordYMinimale) / ratioY * hauteur);
-			int coordXFin   = 30 + (int)((this.coordonneesX[0]              - coordXMinimale) / ratioX * largeur);
-			int coordYFin   = 30 + (int)((this.coordonneesY[0]              - coordYMinimale) / ratioY * hauteur);
+			int coordXDébut = 30 + (int)((this.coordonneesX[noeudPrecedent] - coordXMinimale) * ratioX);
+			int coordYDébut = 30 + (int)((this.coordonneesY[noeudPrecedent] - coordYMinimale) * ratioY);
+			int coordXFin   = 30 + (int)((this.coordonneesX[0]              - coordXMinimale) * ratioX);
+			int coordYFin   = 30 + (int)((this.coordonneesY[0]              - coordYMinimale) * ratioY);
 
 			graphique2D.drawLine(coordXDébut, coordYDébut, coordXFin, coordYFin);
 
 			couleurIndex++;
 		}
 		
-		for (int cpt = 1; cpt < this.nombreNoeuds; cpt++)
+		for (int cpt = 1; cpt <= this.nombreNoeuds; cpt++)
 		{
-			int coordX = 30 + (int)((this.coordonneesX[cpt] - coordXMinimale) / ratioX * largeur);
-			int coordY = 30 + (int)((this.coordonneesY[cpt] - coordYMinimale) / ratioY * hauteur);
+			int coordX = 30 + (int)((this.coordonneesX[cpt] - coordXMinimale) * ratioX);
+			int coordY = 30 + (int)((this.coordonneesY[cpt] - coordYMinimale) * ratioY);
 
 			graphique2D.setColor(Color.BLACK);
 			graphique2D.fillOval(coordX - 4, coordY - 4, 8, 8);

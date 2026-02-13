@@ -175,6 +175,7 @@ public class PanelRecuitSimule extends JPanel implements ActionListener
 		this.panelGraphique = new PanelGraphiqueTournees();
 		this.panelGraphique.setBackground(Color.WHITE);
 		this.panelGraphique.setBorder(BorderFactory.createTitledBorder("Meilleure solution"));
+		this.panelGraphique.setPreferredSize(new Dimension(400, 400));
 		
 		panel.add(scrollJournal);
 		panel.add(this.panelGraphique);
