@@ -1,140 +1,119 @@
 package app.ihm;
 
+import java.awt.*;
 import java.util.List;
-
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.BasicStroke;
-
 import javax.swing.JPanel;
 
 public class PanelGraphiqueTournees extends JPanel
 {
-	private static final Color[] PALETTE_COULEURS =
-	{
-		new Color(41, 128, 185),
-		new Color(39, 174, 96 ),
-		new Color(192, 57, 43 ),
-		new Color(142, 68, 173),
-		new Color(243, 156, 18),
+	private static final Color[] COLS = {
+		new Color(41, 128, 185), 
+		new Color(39, 174, 96),  
+		new Color(192, 57, 43),
+		new Color(142, 68, 173), 
+		new Color(243, 156, 18), 
 		new Color(22, 160, 133),
-		new Color(231, 76, 60 ),
-		new Color(52, 73, 94  ),
+		new Color(231, 76, 60),  
+		new Color(52, 73, 94),   
 		new Color(241, 196, 15),
-		new Color(26, 188, 156),
-		new Color(155, 89, 182),
+		new Color(26, 188, 156), 
+		new Color(155, 89, 182), 
 		new Color(230, 126, 34),
-		new Color(46, 204, 113),
-		new Color(52, 152, 219),
-		new Color(211, 84, 0  )
+		new Color(46, 204, 113), 
+		new Color(52, 152, 219), 
+		new Color(211, 84, 0)
 	};
 	
-	private double[] coordonneesX;
-	private double[] coordonneesY;
+	private double[] xs;
+	private double[] ys;
+	private List<List<Integer>> tournees;
+	private int nbNoeuds;
 
-	private List<List<Integer>> listeTournees;
-
-	private int nombreNoeuds;
-
-	public void definirDonnees(double[] coordonneesX, double[] coordonneesY, List<List<Integer>> listeTournees, int nombreNoeuds)
-	{
-		this.coordonneesX  = coordonneesX;
-		this.coordonneesY  = coordonneesY;
-		this.listeTournees = listeTournees;
-		this.nombreNoeuds  = nombreNoeuds;
-
-		this.repaint();
+	public void definirDonnees(double[] xs, double[] ys, List<List<Integer>> tournees, int nbNoeuds) {
+		this.xs = xs;
+		this.ys = ys;
+		this.tournees = tournees;
+		this.nbNoeuds = nbNoeuds;
+		repaint();
 	}
 	
-	public void effacer()
-	{
-		this.coordonneesX  = null;
-		this.coordonneesY  = null;
-		this.listeTournees = null;
-		this.nombreNoeuds  = 0;
-
-		this.repaint();
+	public void effacer() {
+		this.tournees = null;
+		repaint();
 	}
 
-	protected void paintComponent(Graphics graphique)
-	{
-		super.paintComponent(graphique);
-
-		if (this.coordonneesX == null || this.coordonneesY == null || this.listeTournees == null || this.nombreNoeuds == 0)
-		{
+	@Override
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		
+		if (tournees == null) {
 			return;
 		}
-
-		Graphics2D graphique2D = (Graphics2D) graphique;
-		graphique2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-		double coordXMinimale = this.coordonneesX[0];
-		double coordXMaximale = this.coordonneesX[0];
-		double coordYMinimale = this.coordonneesY[0];
-		double coordYMaximale = this.coordonneesY[0];
-
-		for (int cpt = 1; cpt <= this.nombreNoeuds; cpt++)
-		{
-			if (this.coordonneesX[cpt] < coordXMinimale) coordXMinimale = this.coordonneesX[cpt];
-			if (this.coordonneesX[cpt] > coordXMaximale) coordXMaximale = this.coordonneesX[cpt];
-			if (this.coordonneesY[cpt] < coordYMinimale) coordYMinimale = this.coordonneesY[cpt];
-			if (this.coordonneesY[cpt] > coordYMaximale) coordYMaximale = this.coordonneesY[cpt];
-		}
-
-		int largeur = this.getWidth()  - 60;
-		int hauteur = this.getHeight() - 60;
-
-		double ratioX = (coordXMaximale - coordXMinimale) > 0 ? largeur / (coordXMaximale - coordXMinimale) : 1;
-		double ratioY = (coordYMaximale - coordYMinimale) > 0 ? hauteur / (coordYMaximale - coordYMinimale) : 1;
 		
-		int couleurIndex = 0;
-		for (List<Integer> tournee : this.listeTournees)
-		{
-			graphique2D.setColor(PALETTE_COULEURS[couleurIndex % PALETTE_COULEURS.length]);
-			graphique2D.setStroke(new BasicStroke(2.0f));
-			
-			int noeudPrecedent = 0;
-			for (int noeud : tournee)
-			{
-				int coordXDébut = 30 + (int)((this.coordonneesX[noeudPrecedent] - coordXMinimale) * ratioX);
-				int coordYDébut = 30 + (int)((this.coordonneesY[noeudPrecedent] - coordYMinimale) * ratioY);
-				int coordXFin   = 30 + (int)((this.coordonneesX[noeud]          - coordXMinimale) * ratioX);
-				int coordYFin   = 30 + (int)((this.coordonneesY[noeud]          - coordYMinimale) * ratioY);
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		
+		int w = getWidth() - 60;
+		int h = getHeight() - 60;
 
-				graphique2D.drawLine(coordXDébut, coordYDébut, coordXFin, coordYFin);
-				noeudPrecedent = noeud;
+		double minX = Double.MAX_VALUE;
+		double maxX = -Double.MAX_VALUE;
+		double minY = Double.MAX_VALUE;
+		double maxY = -Double.MAX_VALUE;
+		
+		for (int i = 0; i <= nbNoeuds; i++) {
+			minX = Math.min(minX, xs[i]);
+			maxX = Math.max(maxX, xs[i]);
+			minY = Math.min(minY, ys[i]);
+			maxY = Math.max(maxY, ys[i]);
+		}
+		
+		double rx = Math.max(maxX - minX, 1);
+		double ry = Math.max(maxY - minY, 1);
+
+		for (int t = 0; t < tournees.size(); t++) {
+			Color col = COLS[t % COLS.length];
+			g2.setColor(col);
+			g2.setStroke(new BasicStroke(2));
+			
+			List<Integer> tour = tournees.get(t);
+			
+			if (tour.isEmpty()) {
+				continue;
 			}
 			
-			int coordXDébut = 30 + (int)((this.coordonneesX[noeudPrecedent] - coordXMinimale) * ratioX);
-			int coordYDébut = 30 + (int)((this.coordonneesY[noeudPrecedent] - coordYMinimale) * ratioY);
-			int coordXFin   = 30 + (int)((this.coordonneesX[0]              - coordXMinimale) * ratioX);
-			int coordYFin   = 30 + (int)((this.coordonneesY[0]              - coordYMinimale) * ratioY);
-
-			graphique2D.drawLine(coordXDébut, coordYDébut, coordXFin, coordYFin);
-
-			couleurIndex++;
+			int px = 30 + (int)((xs[0] - minX) / rx * w);
+			int py = 30 + (int)((ys[0] - minY) / ry * h);
+			int prevX = px;
+			int prevY = py;
+			
+			for (int c : tour) {
+				int cx = 30 + (int)((xs[c] - minX) / rx * w);
+				int cy = 30 + (int)((ys[c] - minY) / ry * h);
+				
+				g2.drawLine(prevX, prevY, cx, cy);
+				g2.fillOval(cx - 5, cy - 5, 10, 10);
+				
+				g2.setColor(Color.BLACK);
+				g2.setFont(new Font("Arial", Font.PLAIN, 9));
+				g2.drawString(String.valueOf(c), cx + 6, cy - 2);
+				g2.setColor(col);
+				
+				prevX = cx;
+				prevY = cy;
+			}
+			
+			g2.drawLine(prevX, prevY, px, py);
 		}
 		
-		for (int cpt = 1; cpt <= this.nombreNoeuds; cpt++)
-		{
-			int coordX = 30 + (int)((this.coordonneesX[cpt] - coordXMinimale) * ratioX);
-			int coordY = 30 + (int)((this.coordonneesY[cpt] - coordYMinimale) * ratioY);
-
-			graphique2D.setColor(Color.BLACK);
-			graphique2D.fillOval(coordX - 4, coordY - 4, 8, 8);
-		}
+		int dx = 30 + (int)((xs[0] - minX) / rx * w);
+		int dy = 30 + (int)((ys[0] - minY) / ry * h);
 		
-		int coordXDepot = 30 + (int)((this.coordonneesX[0] - coordXMinimale) / ratioX * largeur);
-		int coordYDepot = 30 + (int)((this.coordonneesY[0] - coordYMinimale) / ratioY * hauteur);
+		g2.setColor(Color.RED);
+		g2.fillRect(dx - 7, dy - 7, 14, 14);
 		
-		graphique2D.setColor(Color.RED);
-		graphique2D.fillRect(coordXDepot - 7, coordYDepot - 7, 14, 14);
-		
-		graphique2D.setColor(Color.WHITE);
-		graphique2D.setFont(new Font("Arial", Font.BOLD, 10));
-		graphique2D.drawString("D", coordXDepot - 4, coordYDepot + 4);
+		g2.setColor(Color.WHITE);
+		g2.setFont(new Font("Arial", Font.BOLD, 10));
+		g2.drawString("D", dx - 4, dy + 4);
 	}
 }
