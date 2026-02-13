@@ -56,9 +56,8 @@ public class Controleur implements RecuitSimule.Callback
 	public void chargerVRP(String cheminFichier)
 	{
 		this.donneesVRP = new VRPData(cheminFichier);
-		fenetrePrincipale.getPanelRecuit()
-				.ajouterLigneJournal("Charge : " + this.donneesVRP.getNombreClients() + " clients, capacité="
-						+ this.donneesVRP.getCapacite() + ", optimal=" + this.donneesVRP.getDistanceOptimale());
+		fenetrePrincipale.getPanelRecuit().ajouterLigneJournal("Charge : " + this.donneesVRP.getNombreClients()
+			+ " clients, capacité=" + this.donneesVRP.getCapacite() + ", optimal=" + this.donneesVRP.getDistanceOptimale());
 	}
 
 	public boolean estDonneesChargees()
